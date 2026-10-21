@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: skalez
+  profiles:
+    active: local
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        # 연관 데이터를 100개씩 묶어서 조회 (N+1 쿼리 방지)
+        default_batch_fetch_size: 100
+
+# 비밀 값은 운영에서 반드시 환경변수로 넣는다. 없으면 서버가 뜨지 않는다 (실수로 기본값을 쓰는 사고 방지)
+skalez:
+  jwt:
+    secret: ${JWT_SECRET}
+    access-token-ttl: 2h
+  crypto:
+    aes-key: ${AES_KEY}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: jdbc:h2:mem:skalez;MODE=PostgreSQL
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+
+# 로컬 전용 값. 운영 키로 절대 쓰지 말 것
+skalez:
+  jwt:
+    secret: local-only-secret-change-me-0123456789abcdef
+  crypto:
+    aes-key: bG9jYWwtb25seS1hZXMta2V5LWNoYW5nZS1tZS0zMmI=
