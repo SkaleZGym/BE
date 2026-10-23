@@ -21,6 +21,7 @@ public class Member {
     @Column(nullable = false, unique = true, length = 100)
     private String email; // 로그인 조회에 써야 해서 암호화하지 않음
 
+    /** BCrypt 단방향 해시. 원래 비밀번호로 되돌릴 수 없고, 로그인 때 matches()로만 비교한다 */
     @Column(nullable = false)
     private String password;
 
@@ -31,6 +32,10 @@ public class Member {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Role role;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private MemberStatus status;
 
     @Column(nullable = false, length = 10)
     private String language; // 가입 시 언어: ko, en, ja, zh-CN
@@ -44,6 +49,19 @@ public class Member {
         this.name = name;
         this.language = language;
         this.role = Role.USER;
+        this.status = MemberStatus.ACTIVE;
         this.createdAt = Instant.now();
+    }
+
+    public boolean isActive() {
+        return status == MemberStatus.ACTIVE;
+    }
+
+    public void changeStatus(MemberStatus status) {
+        this.status = status;
+    }
+
+    public void changeRole(Role role) {
+        this.role = role;
     }
 }

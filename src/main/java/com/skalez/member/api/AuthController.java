@@ -26,4 +26,9 @@ public class AuthController {
     public TokenResponse login(@Valid @RequestBody LoginRequest request){return authService.login(request);}
     @GetMapping("/api/members/me")
     public MemberResponse me(@AuthenticationPrincipal Jwt jwt){return authService.me(LoginMember.id(jwt));}
+
+    //관리자
+    @PostMapping("/api/admin/auth/login")
+    public TokenResponse adminLogin(@Valid @RequestBody LoginRequest request){return authService.adminLogin(request);}
+    
 }

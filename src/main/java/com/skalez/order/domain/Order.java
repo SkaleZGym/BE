@@ -61,10 +61,15 @@ public class Order {
     @Column(length = 100)
     private String paymentId; // PG 결제 ID
 
+    @Column(length = 50)
+    private String trackingNumber; // 송장번호
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
     private Instant paidAt;
+
+    private Instant shippedAt;
 
     public Order(Long memberId, String currency, ShippingAddress shippingAddress) {
         Instant now = Instant.now();
@@ -109,7 +114,31 @@ public class Order {
         this.paidAt = Instant.now();
     }
 
-    /** 고객 취소는 결제 대기·결제 완료 상태에서만 가능 (배송 준비가 시작되면 불가) */
+    /**
+     * 관리자 배송 처리. 순서: 결제 완료 → 상품 준비 중 → 배송 중(송장번호 필수) → 배송 완료.
+     * 상품 준비 중을 건너뛰고 바로 배송 중으로 보내는 것도 허용한다.
+     */
+    public void changeStatus(OrderStatus next, String trackingNumber) {
+        boolean allowed = switch (status) {
+            case PAID -> next == OrderStatus.PREPARING || next == OrderStatus.SHIPPED;
+            case PREPARING -> next == OrderStatus.SHIPPED;
+            case SHIPPED -> next == OrderStatus.DELIVERED;
+            default -> false;
+        };
+        if (!allowed) {
+            throw new BusinessException(ErrorCode.INVALID_ORDER_STATUS);
+        }
+        if (next == OrderStatus.SHIPPED) {
+            if (trackingNumber == null || trackingNumber.isBlank()) {
+                throw new BusinessException(ErrorCode.TRACKING_NUMBER_REQUIRED);
+            }
+            this.trackingNumber = trackingNumber.trim();
+            this.shippedAt = Instant.now();
+        }
+        this.status = next;
+    }
+
+    /** 취소는 결제 대기·결제 완료 상태에서만 가능 (배송 준비가 시작되면 불가) */
     public void cancel() {
         if (status != OrderStatus.PENDING_PAYMENT && status != OrderStatus.PAID) {
             throw new BusinessException(ErrorCode.INVALID_ORDER_STATUS);

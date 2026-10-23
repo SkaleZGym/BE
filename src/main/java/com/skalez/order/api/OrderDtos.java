@@ -63,6 +63,7 @@ public final class OrderDtos {
             );
         }
     }
+
     public record OrderResponse(
             String orderNumber,
             String status,
@@ -70,6 +71,7 @@ public final class OrderDtos {
             long itemsAmount,
             long shippingFee,
             long totalAmount,
+            String trackingNumber,
             List<OrderItemResponse> items,
             Instant createdAt,
             Instant paidAt
@@ -82,6 +84,7 @@ public final class OrderDtos {
                     order.getItemsAmount(),
                     order.getShippingFee(),
                     order.getTotalAmount(),
+                    order.getTrackingNumber(),
                     order.getItems().stream().map(OrderItemResponse::from).toList(),
                     order.getCreatedAt(),
                     order.getPaidAt()

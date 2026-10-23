@@ -44,8 +44,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/products/**", "/api/categories/**").permitAll()
+                        // 나이스페이 결제창이 결과를 보내는 주소 (로그인 토큰 없음, 서명으로 검증)
+                        .requestMatchers(HttpMethod.POST, "/api/payments/nice/return").permitAll()
+                        // 관리자 로그인은 로그인 전이라 열어 두고, 나머지 /api/admin/** 은 ADMIN만
+                        .requestMatchers("/api/admin/auth/login").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/products/**", "/api/categories/**", "/api/banners/**", "/api/site-texts/**").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));

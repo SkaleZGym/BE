@@ -31,6 +31,11 @@ public class OrderService {
     private final CartItemRepository cartItemRepository;
     private final ProductVariantRepository variantRepository;
     private final PaymentService paymentService;
+
+    /**
+     * 장바구니 → 주문. 이 시점에 재고를 먼저 잡아 두고(차감), 결제 실패·취소 시 되돌린다.
+     * TODO: 결제하지 않고 방치된 주문을 30분 뒤 자동 취소하는 스케줄러 필요
+     */
     @Transactional
     public OrderResponse placeOrder(Long memberId, PlaceOrderRequest request, Locale locale) {
         List<CartItem> cartItems = cartItemRepository.findByMemberIdOrderByCreatedAtAsc(memberId);
@@ -56,31 +61,55 @@ public class OrderService {
         return OrderResponse.from(order);
     }
 
+    /** FE에서 PG 결제를 마친 뒤 호출. 서버가 PG에 직접 조회해서 금액을 검증한다 */
     @Transactional
     public OrderResponse confirmPayment(Long memberId, String orderNumber, String paymentId) {
         Order order = findMyOrder(memberId, orderNumber);
         if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
             throw new BusinessException(ErrorCode.INVALID_ORDER_STATUS);
         }
-        paymentService.confirm(paymentId, order.totalMoney());
+        paymentService.confirm(paymentId, order.getOrderNumber(), order.totalMoney());
         order.markPaid(paymentId);
         return OrderResponse.from(order);
+    }
+
+    /**
+     * PG가 결제 결과를 우리 서버로 직접 보내는 방식(나이스페이 returnUrl)에서 호출.
+     * 로그인 토큰이 없으므로 주문번호로 찾고, 결제창 금액이 서버 주문 금액과 같은지 먼저 확인한다.
+     * 같은 결과가 두 번 들어와도(새로고침 등) 이미 결제된 주문이면 그대로 성공 처리한다.
+     */
+    @Transactional
+    public Order confirmPaymentByPg(String orderNumber, String paymentKey, long requestedAmount) {
+        Order order = orderRepository.findByOrderNumber(orderNumber)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+        if (order.getStatus() == OrderStatus.PAID && paymentKey.equals(order.getPaymentId())) {
+            return order;
+        }
+        if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
+            throw new BusinessException(ErrorCode.INVALID_ORDER_STATUS);
+        }
+        if (order.totalMoney().getAmount() != requestedAmount) {
+            throw new BusinessException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
+        }
+        paymentService.confirm(paymentKey, orderNumber, order.totalMoney());
+        order.markPaid(paymentKey);
+        return order;
     }
 
     @Transactional
     public OrderResponse cancel(Long memberId, String orderNumber) {
         Order order = findMyOrder(memberId, orderNumber);
-        boolean wasPaid = order.getStatus() == OrderStatus.PAID;
-        order.cancel();
-
-        if (wasPaid) {
-            paymentService.refund(order.getPaymentId(), order.totalMoney(), "고객 주문 취소");
-        }
-        for (OrderItem item : order.getItems()) {
-            variantRepository.findById(item.getVariantId())
-                    .ifPresent(variant -> variant.increaseStock(item.getQuantity()));
-        }
+        cancelOrder(order);
         return OrderResponse.from(order);
+    }
+
+    /** 관리자 취소 (품절·고객 요청 등). 규칙은 고객 취소와 같다 */
+    @Transactional
+    public Order cancelByAdmin(String orderNumber) {
+        Order order = orderRepository.findByOrderNumber(orderNumber)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+        cancelOrder(order);
+        return order;
     }
 
     public List<OrderResponse> getMyOrders(Long memberId) {
@@ -91,6 +120,20 @@ public class OrderService {
 
     public OrderResponse getMyOrder(Long memberId, String orderNumber) {
         return OrderResponse.from(findMyOrder(memberId, orderNumber));
+    }
+
+    /** 결제됐던 주문이면 PG 환불 → 재고 복구 */
+    private void cancelOrder(Order order) {
+        boolean wasPaid = order.getStatus() == OrderStatus.PAID;
+        order.cancel();
+
+        if (wasPaid) {
+            paymentService.refund(order.getPaymentId(), order.getOrderNumber(), order.totalMoney(), "주문 취소");
+        }
+        for (OrderItem item : order.getItems()) {
+            variantRepository.findById(item.getVariantId())
+                    .ifPresent(variant -> variant.increaseStock(item.getQuantity()));
+        }
     }
 
     /** 다른 회원의 주문번호를 넣어도 "없음"으로 보이게 한다 */

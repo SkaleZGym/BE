@@ -27,4 +27,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                                      Pageable pageable);
 
     Optional<Product> findByIdAndStatus(Long id, ProductStatus status);
+
+    boolean existsBySku(String sku);
 }

@@ -1,5 +1,8 @@
 package com.skalez.global.i18n;
 
+import com.skalez.global.error.BusinessException;
+import com.skalez.global.error.ErrorCode;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -39,6 +42,14 @@ public enum SupportedLanguage {
                 .filter(lang -> lang.locale.equals(locale))
                 .findFirst()
                 .orElse(DEFAULT);
+    }
+
+    /** 관리자 입력값의 언어 코드(ko, en, ja, zh-CN) 확인. 지원하지 않는 코드면 INVALID_INPUT */
+    public static SupportedLanguage fromTag(String tag) {
+        return Arrays.stream(values())
+                .filter(lang -> lang.tag().equals(tag))
+                .findFirst()
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_INPUT));
     }
 
     public static List<Locale> locales() {

@@ -23,6 +23,20 @@ skalez:
     access-token-ttl: 2h
   crypto:
     aes-key: ${AES_KEY}
+  # 첫 관리자 계정. 서버가 뜰 때 이 이메일 계정이 없으면 만든다. 계정이 생긴 뒤에는 비워 둬도 된다
+  admin:
+    email: ${ADMIN_EMAIL:}
+    password: ${ADMIN_PASSWORD:}
+    name: 관리자
+  # 결제 PG 선택: nice(나이스페이먼츠) | fake(로컬 가짜 결제) | portone(해외용, 연동 전)
+  payment:
+    provider: ${PAYMENT_PROVIDER:nice}
+    nice:
+      client-key: ${NICEPAY_CLIENT_KEY:}
+      secret-key: ${NICEPAY_SECRET_KEY:}
+      api-url: ${NICEPAY_API_URL:https://api.nicepay.co.kr}
+      # 결제 처리 후 고객을 돌려보낼 FE 페이지
+      result-redirect-url: ${PAYMENT_RESULT_URL:https://skalez.com/order/result}
 
 ---
 spring:
@@ -44,3 +58,12 @@ skalez:
     secret: local-only-secret-change-me-0123456789abcdef
   crypto:
     aes-key: bG9jYWwtb25seS1hZXMta2V5LWNoYW5nZS1tZS0zMmI=
+  admin:
+    email: admin@skalez.local
+    password: local-admin-pass-1234
+  # 로컬은 기본 가짜 결제. 나이스페이 샌드박스로 해보려면 PAYMENT_PROVIDER=nice + 샌드박스 키 환경변수로 실행
+  payment:
+    provider: ${PAYMENT_PROVIDER:fake}
+    nice:
+      api-url: ${NICEPAY_API_URL:https://sandbox-api.nicepay.co.kr}
+      result-redirect-url: ${PAYMENT_RESULT_URL:http://localhost:3002/order/result}

@@ -71,10 +71,22 @@ public class Product {
         translations.add(new ProductTranslation(this, language.tag(), name, description));
     }
 
+    /** 관리자 수정용: 그 언어 번역이 있으면 고치고, 없으면 새로 추가 */
+    public void putTranslation(SupportedLanguage language, String name, String description) {
+        findTranslation(language).ifPresentOrElse(
+                translation -> translation.change(name, description),
+                () -> addTranslation(language, name, description)
+        );
+    }
+
     /** 가격은 최소 단위(원, 센트). listAmount는 할인 전 가격(없으면 null) */
     public void putPrice(String currency, long amount, Long listAmount) {
         Currency.getInstance(currency); // 잘못된 통화코드 방지
         prices.put(currency, new PriceTag(amount, listAmount));
+    }
+
+    public void clearPrices() {
+        prices.clear();
     }
 
     public ProductVariant addVariant(String size, int stock) {
@@ -83,8 +95,37 @@ public class Product {
         return variant;
     }
 
+    /**
+     * 관리자 수정용: 같은 사이즈가 있으면 재고만 바꾸고, 없으면 새 옵션 추가.
+     * 장바구니·주문이 옵션을 참조하고 있어서 옵션 삭제 대신 재고 0으로 둔다.
+     */
+    public void upsertVariant(String size, int stock) {
+        variants.stream()
+                .filter(variant -> variant.getSize().equals(size))
+                .findFirst()
+                .ifPresentOrElse(variant -> variant.changeStock(stock), () -> addVariant(size, stock));
+    }
+
     public void addBadge(Badge badge) {
         badges.add(badge);
+    }
+
+    public void replaceBadges(Set<Badge> newBadges) {
+        badges.clear();
+        badges.addAll(newBadges);
+    }
+
+    public void changeSku(String sku) {
+        this.sku = sku;
+    }
+
+    public void changeInfo(Category category, String imageUrl) {
+        this.category = category;
+        this.imageUrl = imageUrl;
+    }
+
+    public void changeStatus(ProductStatus status) {
+        this.status = status;
     }
 
     public Money priceIn(String currency) {
