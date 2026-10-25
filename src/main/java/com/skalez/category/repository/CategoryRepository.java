@@ -10,4 +10,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     List<Category> findAllByOrderBySortOrderAsc();
     Optional<Category>findByCode(String code);
+    boolean existsByCode(String code);
+    /** 하위 카테고리가 있는지 (삭제·이동 가능 여부 판단) */
+    boolean existsByParent(Category parent);
 }

@@ -12,6 +12,9 @@ public enum ErrorCode {
     SELF_MODIFICATION(HttpStatus.BAD_REQUEST, "error.member.self-modification"),
 
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "error.category.not-found"),
+    CATEGORY_CODE_DUPLICATED(HttpStatus.CONFLICT, "error.category.code-duplicated"),
+    CATEGORY_PARENT_INVALID(HttpStatus.BAD_REQUEST, "error.category.parent-invalid"),
+    CATEGORY_IN_USE(HttpStatus.CONFLICT, "error.category.in-use"),
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "error.product.not-found"),
     VARIANT_NOT_FOUND(HttpStatus.NOT_FOUND, "error.product.variant-not-found"),
     PRICE_NOT_AVAILABLE(HttpStatus.BAD_REQUEST, "error.product.price-not-available"),

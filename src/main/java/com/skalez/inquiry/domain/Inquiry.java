@@ -1,6 +1,8 @@
 package com.skalez.inquiry.domain;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,6 +20,7 @@ public class Inquiry {
     @Column(name = "member_id", nullable =false)
     private Long memberId;
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR) // enum을 varchar로 저장. H2·PostgreSQL 모두 같은 타입이라 Flyway 스키마 하나로 검증된다
     @Column(nullable = false, length = 20)
     private InquiryCategory category;
     @Column(nullable = false, length = 100)
@@ -28,6 +31,7 @@ public class Inquiry {
     @Column(length = 30)
     private String orderNumber;
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR) // enum을 varchar로 저장. H2·PostgreSQL 모두 같은 타입이라 Flyway 스키마 하나로 검증된다
     @Column(nullable = false, length = 20)
     private InquiryStatus status;
     @Column(length = 2000)

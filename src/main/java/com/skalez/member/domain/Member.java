@@ -2,6 +2,8 @@ package com.skalez.member.domain;
 
 import com.skalez.global.security.crypto.EncryptedStringConverter;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,10 +32,12 @@ public class Member {
     private String name; // AES-256 암호화 저장
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR) // enum을 varchar로 저장. H2·PostgreSQL 모두 같은 타입이라 Flyway 스키마 하나로 검증된다
     @Column(nullable = false, length = 20)
     private Role role;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR) // enum을 varchar로 저장. H2·PostgreSQL 모두 같은 타입이라 Flyway 스키마 하나로 검증된다
     @Column(nullable = false, length = 20)
     private MemberStatus status;
 

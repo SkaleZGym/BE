@@ -1,6 +1,7 @@
 package com.skalez.global.config;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import com.skalez.global.security.CorsProperties;
 import com.skalez.global.security.JwtProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -34,6 +35,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtProperties jwtProperties;
+    private final CorsProperties corsProperties;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -77,16 +79,21 @@ public class SecurityConfig {
         return NimbusJwtDecoder.withSecretKey(secretKey()).macAlgorithm(MacAlgorithm.HS256).build();
     }
 
-    /** 기존 WebConfig의 CORS 설정을 Security 쪽으로 옮김 */
+    /**
+     * 브라우저에서 API를 부를 수 있는 FE 주소. 로컬·운영이 달라서 코드에 박지 않고 설정(skalez.cors.allowed-origins)에서 읽는다.
+     * 운영은 환경변수 CORS_ALLOWED_ORIGINS. 비어 있으면 아무 브라우저도 API를 못 쓰게 되므로 서버 시작 시 바로 실패시킨다
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+        List<String> origins = corsProperties.allowedOrigins();
+        if (origins == null || origins.isEmpty()) {
+            throw new IllegalStateException("CORS 허용 오리진이 없습니다. 환경변수 CORS_ALLOWED_ORIGINS에 FE 주소를 넣어 주세요");
+        }
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of(
-                "http://localhost:3002",       // 로컬 FE (Next.js)
-                "https://skalez-*.vercel.app"  // Vercel 미리보기 (실제 프로젝트명에 맞게 수정)
-        ));
+        config.setAllowedOriginPatterns(origins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
+        config.setMaxAge(3600L); // 브라우저가 사전 요청(preflight) 결과를 1시간 기억
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", config);

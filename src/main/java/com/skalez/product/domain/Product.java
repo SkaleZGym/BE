@@ -6,6 +6,8 @@ import com.skalez.global.error.ErrorCode;
 import com.skalez.global.i18n.SupportedLanguage;
 import com.skalez.global.money.Money;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,6 +33,7 @@ public class Product {
     private Category category;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR) // enum을 varchar로 저장. H2·PostgreSQL 모두 같은 타입이라 Flyway 스키마 하나로 검증된다
     @Column(nullable = false, length = 20)
     private ProductStatus status;
 
@@ -46,6 +49,7 @@ public class Product {
     @ElementCollection
     @CollectionTable(name = "product_badges", joinColumns = @JoinColumn(name = "product_id"))
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR) // enum을 varchar로 저장. H2·PostgreSQL 모두 같은 타입이라 Flyway 스키마 하나로 검증된다
     @Column(name = "badge", length = 20)
     private Set<Badge> badges = new HashSet<>();
 

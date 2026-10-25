@@ -26,6 +26,10 @@ public class LocalDataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        // 같은 DB로 다시 뜨거나(테스트 컨텍스트 재생성 등) 이미 샘플이 있으면 다시 넣지 않는다 (code unique 충돌 방지)
+        if (categoryRepository.count() > 0) {
+            return;
+        }
         Category men = save(new Category("MEN", null, 1)
                 .name(KO, "남성").name(EN, "Men").name(JA, "メンズ").name(ZH_CN, "男装"));
         Category menTop = save(new Category("MEN_TOP", men, 2)

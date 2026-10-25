@@ -1,5 +1,6 @@
 package com.skalez.product.repository;
 
+import com.skalez.category.domain.Category;
 import com.skalez.product.domain.Product;
 import com.skalez.product.domain.ProductStatus;
 import org.springframework.data.domain.Page;
@@ -29,4 +30,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Optional<Product> findByIdAndStatus(Long id, ProductStatus status);
 
     boolean existsBySku(String sku);
+
+    /** 숨긴 상품까지 포함해서 그 카테고리를 쓰는 상품이 하나라도 있는지 (카테고리 삭제 가능 여부 판단) */
+    boolean existsByCategory(Category category);
 }
