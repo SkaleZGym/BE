@@ -43,6 +43,9 @@ public enum ErrorCode {
     COUPON_USAGE_EXCEEDED(HttpStatus.CONFLICT, "error.coupon.usage-exceeded"),
     INQUIRY_NOT_FOUND(HttpStatus.NOT_FOUND, "error.inquiry.not-found"),
     INQUIRY_ALREADY_ANSWERED(HttpStatus.CONFLICT, "error.inquiry.already-answered"),
+    REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "error.review.not-found"),
+    REVIEW_NOT_PURCHASED(HttpStatus.FORBIDDEN, "error.review.not-purchased"),
+    REVIEW_DUPLICATED(HttpStatus.CONFLICT, "error.review.duplicated"),
     BANNER_NOT_FOUND(HttpStatus.NOT_FOUND, "error.banner.not-found"),
     NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "error.notice.not-found"),
     FAQ_NOT_FOUND(HttpStatus.NOT_FOUND, "error.faq.not-found");
