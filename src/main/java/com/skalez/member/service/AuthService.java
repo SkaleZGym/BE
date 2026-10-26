@@ -4,10 +4,12 @@ import com.skalez.global.error.BusinessException;
 import com.skalez.global.error.ErrorCode;
 import com.skalez.global.i18n.SupportedLanguage;
 import com.skalez.global.security.JwtTokenProvider;
+import com.skalez.member.api.AuthDtos.ChangePasswordRequest;
 import com.skalez.member.api.AuthDtos.LoginRequest;
 import com.skalez.member.api.AuthDtos.MemberResponse;
 import com.skalez.member.api.AuthDtos.SignupRequest;
 import com.skalez.member.api.AuthDtos.TokenResponse;
+import com.skalez.member.api.AuthDtos.UpdateMeRequest;
 import com.skalez.member.domain.Member;
 import com.skalez.member.domain.Role;
 import com.skalez.member.repository.MemberRepository;
@@ -58,6 +60,30 @@ public class AuthService {
     public MemberResponse me(Long memberId) {
         return memberRepository.findById(memberId)
                 .map(MemberResponse::from)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+    }
+
+    @Transactional
+    public MemberResponse updateMe(Long memberId, UpdateMeRequest request) {
+        Member member = findMember(memberId);
+        // 지원하지 않는 언어 코드면 INVALID_INPUT
+        String language = SupportedLanguage.fromTag(request.language()).tag();
+        member.changeProfile(request.name().trim(), language);
+        return MemberResponse.from(member);
+    }
+
+    /** 현재 비밀번호를 한 번 더 확인한다 (로그인된 기기를 잠깐 빌린 사람이 바꾸지 못하게) */
+    @Transactional
+    public void changePassword(Long memberId, ChangePasswordRequest request) {
+        Member member = findMember(memberId);
+        if (!passwordEncoder.matches(request.currentPassword(), member.getPassword())) {
+            throw new BusinessException(ErrorCode.CURRENT_PASSWORD_MISMATCH);
+        }
+        member.changePassword(passwordEncoder.encode(request.newPassword()));
+    }
+
+    private Member findMember(Long memberId) {
+        return memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }
 

@@ -32,6 +32,13 @@ public class ProductService {
         return PageResponse.from(products.map(product -> ProductResponse.of(product, language)));
     }
 
+    /** 상품 코드로 조회. FE의 상품 번호(예: 166)와 BE 상품을 SKU(SKZ-166)로 잇는다 */
+    public ProductResponse getProductBySku(String sku, Locale locale) {
+        return productRepository.findBySkuAndStatus(sku, ProductStatus.ON_SALE)
+                .map(product -> ProductResponse.of(product, SupportedLanguage.from(locale)))
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+    }
+
     public ProductResponse getProduct(Long id, Locale locale) {
         return productRepository.findByIdAndStatus(id, ProductStatus.ON_SALE)
                 .map(product -> ProductResponse.of(product, SupportedLanguage.from(locale)))

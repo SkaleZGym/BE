@@ -9,6 +9,7 @@ public enum ErrorCode {
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "error.member.invalid-credentials"),
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "error.member.not-found"),
     MEMBER_SUSPENDED(HttpStatus.FORBIDDEN, "error.member.suspended"),
+    CURRENT_PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "error.member.current-password-mismatch"),
     SELF_MODIFICATION(HttpStatus.BAD_REQUEST, "error.member.self-modification"),
 
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "error.category.not-found"),
@@ -41,6 +42,7 @@ public enum ErrorCode {
     COUPON_MIN_ORDER_NOT_MET(HttpStatus.BAD_REQUEST, "error.coupon.min-order-not-met"),
     COUPON_USAGE_EXCEEDED(HttpStatus.CONFLICT, "error.coupon.usage-exceeded"),
     INQUIRY_NOT_FOUND(HttpStatus.NOT_FOUND, "error.inquiry.not-found"),
+    INQUIRY_ALREADY_ANSWERED(HttpStatus.CONFLICT, "error.inquiry.already-answered"),
     BANNER_NOT_FOUND(HttpStatus.NOT_FOUND, "error.banner.not-found"),
     NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "error.notice.not-found"),
     FAQ_NOT_FOUND(HttpStatus.NOT_FOUND, "error.faq.not-found");

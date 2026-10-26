@@ -68,4 +68,15 @@ public class Member {
     public void changeRole(Role role) {
         this.role = role;
     }
+
+    /** 마이페이지: 이름·기본 언어 */
+    public void changeProfile(String name, String language) {
+        this.name = name;
+        this.language = language;
+    }
+
+    /** 이미 인코딩된 비밀번호를 받는다 (평문을 엔티티에 넘기지 않는다) */
+    public void changePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
 }

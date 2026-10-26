@@ -26,6 +26,13 @@ public class InquiryService {
     }
     public PageResponse<InquiryResponse> getMyInquiries(Long memberId, Pageable pageable){return PageResponse.from(inquiryRepository.findByMemberId(memberId, pageable).map(InquiryResponse::from));}
     public InquiryResponse getMyInquiry(Long memberId, Long inquiryId){return inquiryRepository.findByIdAndMemberId(inquiryId, memberId).map(InquiryResponse::from).orElseThrow(() -> new BusinessException(ErrorCode.INQUIRY_NOT_FOUND));}
+    /** 답변이 달리기 전에만 지울 수 있다 (답변 기록 보존) */
+    @Transactional
+    public void delete(Long memberId, Long inquiryId){
+        Inquiry inquiry = inquiryRepository.findByIdAndMemberId(inquiryId, memberId).orElseThrow(() -> new BusinessException(ErrorCode.INQUIRY_NOT_FOUND));
+        if (inquiry.isAnswered()) {throw new BusinessException(ErrorCode.INQUIRY_ALREADY_ANSWERED);}
+        inquiryRepository.delete(inquiry);
+    }
     // --관리자 -----
     public PageResponse<InquiryResponse> getInquiries(InquiryStatus status, Pageable pageable){
         Page<Inquiry> inquiries = status == null ? inquiryRepository.findAll(pageable):inquiryRepository.findByStatus(status, pageable);

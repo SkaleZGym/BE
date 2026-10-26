@@ -49,6 +49,9 @@ public class Inquiry {
         this.status = InquiryStatus.WAITING;
         this.createdAt = Instant.now();
     }
+    public boolean isAnswered(){
+        return status == InquiryStatus.ANSWERED;
+    }
     public void answer(String answer){
         this.answer = answer;
         this.status = InquiryStatus.ANSWERED;

@@ -29,6 +29,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     Optional<Product> findByIdAndStatus(Long id, ProductStatus status);
 
+    Optional<Product> findBySkuAndStatus(String sku, ProductStatus status);
+
     boolean existsBySku(String sku);
 
     /** 숨긴 상품까지 포함해서 그 카테고리를 쓰는 상품이 하나라도 있는지 (카테고리 삭제 가능 여부 판단) */

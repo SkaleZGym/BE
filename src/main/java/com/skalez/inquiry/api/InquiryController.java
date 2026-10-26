@@ -27,4 +27,7 @@ public class InquiryController {
     public PageResponse<InquiryResponse> getMyInquiries(@AuthenticationPrincipal Jwt jwt, @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)Pageable pageable){return inquiryService.getMyInquiries(LoginMember.id(jwt), pageable);}
     @GetMapping("/{inquiryId}")
     public InquiryResponse getMyInquiry(@AuthenticationPrincipal Jwt jwt, @PathVariable Long inquiryId){return inquiryService.getMyInquiry(LoginMember.id(jwt), inquiryId);}
+    @DeleteMapping("/{inquiryId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@AuthenticationPrincipal Jwt jwt, @PathVariable Long inquiryId){inquiryService.delete(LoginMember.id(jwt), inquiryId);}
 }
