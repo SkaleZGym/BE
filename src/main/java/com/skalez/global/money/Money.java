@@ -43,6 +43,11 @@ public class Money {
         return new Money(Math.multiplyExact(amount, quantity), currency);
     }
 
+    public Money minus(Money other){requireSameCurrency(other);
+    return of(Math.subtractExact(amount, other.amount), currency);
+    }
+
+
     public boolean isGreaterThanOrEqual(Money other) {requireSameCurrency(other);
         return amount >= other.amount;
     }

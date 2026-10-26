@@ -2,19 +2,23 @@ package com.skalez.order.service;
 
 import com.skalez.cart.domain.CartItem;
 import com.skalez.cart.repository.CartItemRepository;
+import com.skalez.coupon.service.CouponService;
 import com.skalez.global.error.BusinessException;
 import com.skalez.global.error.ErrorCode;
 import com.skalez.global.i18n.SupportedLanguage;
+import com.skalez.global.money.Money;
 import com.skalez.order.api.OrderDtos.OrderResponse;
 import com.skalez.order.api.OrderDtos.PlaceOrderRequest;
 import com.skalez.order.domain.Order;
 import com.skalez.order.domain.OrderItem;
 import com.skalez.order.domain.OrderStatus;
+import com.skalez.order.domain.ShippingAddress;
 import com.skalez.order.repository.OrderRepository;
 import com.skalez.payment.service.PaymentService;
 import com.skalez.product.domain.Product;
 import com.skalez.product.domain.ProductVariant;
 import com.skalez.product.repository.ProductVariantRepository;
+import com.skalez.shipping.service.ShippingFeeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,9 +35,12 @@ public class OrderService {
     private final CartItemRepository cartItemRepository;
     private final ProductVariantRepository variantRepository;
     private final PaymentService paymentService;
+    private final CouponService couponService;
+    private final ShippingFeeService shippingFeeService;
 
     /**
      * 장바구니 → 주문. 이 시점에 재고를 먼저 잡아 두고(차감), 결제 실패·취소 시 되돌린다.
+     * 금액: 상품 합계 - 할인코드 + 배송비(할인 후 금액 기준 무료배송, 제주·도서산간 추가)
      * TODO: 결제하지 않고 방치된 주문을 30분 뒤 자동 취소하는 스케줄러 필요
      */
     @Transactional
@@ -45,7 +52,8 @@ public class OrderService {
 
         SupportedLanguage language = SupportedLanguage.from(locale);
         String currency = language.currency();
-        Order order = new Order(memberId, currency, request.shippingAddress().toEntity());
+        ShippingAddress address = request.shippingAddress().toEntity();
+        Order order = new Order(memberId, currency, address);
 
         for (CartItem cartItem : cartItems) {
             ProductVariant variant = cartItem.getVariant();
@@ -54,7 +62,14 @@ public class OrderService {
             order.addItem(variant, product.translationFor(language).getName(),
                     product.priceIn(currency), cartItem.getQuantity());
         }
-        order.calculateAmounts();
+
+        Money items = order.itemsMoney();
+        String couponCode = blankToNull(request.couponCode());
+        Money discount = couponCode == null
+                ? Money.zero(currency)
+                : couponService.redeem(memberId, couponCode, items, order.getOrderNumber());
+        Money shippingFee = shippingFeeService.feeFor(items.minus(discount), address.getCountryCode(), address.getPostalCode());
+        order.applyAmounts(discount, shippingFee, couponCode == null ? null : couponCode.toUpperCase(Locale.ROOT));
 
         orderRepository.save(order);
         cartItemRepository.deleteAll(cartItems);
@@ -122,7 +137,7 @@ public class OrderService {
         return OrderResponse.from(findMyOrder(memberId, orderNumber));
     }
 
-    /** 결제됐던 주문이면 PG 환불 → 재고 복구 */
+    /** 결제됐던 주문이면 PG 환불 → 재고 복구 → 할인코드 사용 취소 */
     private void cancelOrder(Order order) {
         boolean wasPaid = order.getStatus() == OrderStatus.PAID;
         order.cancel();
@@ -134,11 +149,18 @@ public class OrderService {
             variantRepository.findById(item.getVariantId())
                     .ifPresent(variant -> variant.increaseStock(item.getQuantity()));
         }
+        if (order.getCouponCode() != null) {
+            couponService.release(order.getOrderNumber());
+        }
     }
 
     /** 다른 회원의 주문번호를 넣어도 "없음"으로 보이게 한다 */
     private Order findMyOrder(Long memberId, String orderNumber) {
         return orderRepository.findByOrderNumberAndMemberId(orderNumber, memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 }

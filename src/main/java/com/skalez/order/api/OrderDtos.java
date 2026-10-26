@@ -31,9 +31,10 @@ public final class OrderDtos {
         }
     }
 
-    /** 장바구니에 담긴 상품 전체로 주문한다 */
+    /** 장바구니에 담긴 상품 전체로 주문한다. couponCode는 선택 */
     public record PlaceOrderRequest(
-            @Valid @NotNull ShippingAddressRequest shippingAddress
+            @Valid @NotNull ShippingAddressRequest shippingAddress,
+            @Size(max = 30) String couponCode
     ) {
     }
 
@@ -69,12 +70,18 @@ public final class OrderDtos {
             String status,
             String currency,
             long itemsAmount,
+            long discountAmount,
             long shippingFee,
             long totalAmount,
+            String couponCode,
+            String courier,
             String trackingNumber,
+            String trackingUrl,
             List<OrderItemResponse> items,
             Instant createdAt,
-            Instant paidAt
+            Instant paidAt,
+            Instant shippedAt,
+            Instant deliveredAt
     ) {
         public static OrderResponse from(Order order) {
             return new OrderResponse(
@@ -82,12 +89,18 @@ public final class OrderDtos {
                     order.getStatus().name(),
                     order.getCurrency(),
                     order.getItemsAmount(),
+                    order.getDiscountAmount(),
                     order.getShippingFee(),
                     order.getTotalAmount(),
+                    order.getCouponCode(),
+                    order.getCourier() == null ? null : order.getCourier().displayName(),
                     order.getTrackingNumber(),
+                    order.trackingUrl(),
                     order.getItems().stream().map(OrderItemResponse::from).toList(),
                     order.getCreatedAt(),
-                    order.getPaidAt()
+                    order.getPaidAt(),
+                    order.getShippedAt(),
+                    order.getDeliveredAt()
             );
         }
     }

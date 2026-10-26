@@ -2,6 +2,7 @@ package com.skalez.content.api;
 
 import com.skalez.content.domain.Banner;
 import com.skalez.content.domain.BannerPosition;
+import com.skalez.content.domain.BannerTarget;
 import com.skalez.content.domain.BannerText;
 import com.skalez.content.domain.SiteText;
 import com.skalez.global.i18n.SupportedLanguage;
@@ -32,7 +33,9 @@ public final class ContentDtos {
     public record BannerSaveRequest(
             @NotNull BannerPosition position,
             @NotBlank @Size(max = 500) String imageUrl,
+            @Size(max = 500) String mobileImageUrl,
             @Size(max = 500) String linkUrl,
+            BannerTarget target,
             int sortOrder,
             boolean active,
             Instant startAt,
@@ -42,15 +45,17 @@ public final class ContentDtos {
     }
 
     /** 고객 화면용: 현재 언어 문구만 */
-    public record BannerResponse(Long id, String position, String imageUrl, String linkUrl,
-                                 String headline, String subtext) {
+    public record BannerResponse(Long id, String position, String imageUrl, String mobileImageUrl, String linkUrl,
+                                 String target, String headline, String subtext) {
         public static BannerResponse of(Banner banner, SupportedLanguage language) {
             BannerText text = banner.textFor(language);
             return new BannerResponse(
                     banner.getId(),
                     banner.getPosition().name(),
                     banner.getImageUrl(),
+                    banner.getMobileImageUrl(),
                     banner.getLinkUrl(),
+                    banner.getTarget().name(),
                     text == null ? null : text.getHeadline(),
                     text == null ? null : text.getSubtext()
             );
@@ -62,7 +67,9 @@ public final class ContentDtos {
             Long id,
             String position,
             String imageUrl,
+            String mobileImageUrl,
             String linkUrl,
+            String target,
             int sortOrder,
             boolean active,
             boolean visibleNow,
@@ -77,7 +84,9 @@ public final class ContentDtos {
                     banner.getId(),
                     banner.getPosition().name(),
                     banner.getImageUrl(),
+                    banner.getMobileImageUrl(),
                     banner.getLinkUrl(),
+                    banner.getTarget().name(),
                     banner.getSortOrder(),
                     banner.isActive(),
                     banner.isVisibleAt(Instant.now()),

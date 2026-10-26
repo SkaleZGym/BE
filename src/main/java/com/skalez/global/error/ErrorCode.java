@@ -32,10 +32,18 @@ public enum ErrorCode {
     PAYMENT_AMOUNT_MISMATCH(HttpStatus.BAD_REQUEST, "error.payment.amount-mismatch"),
     PAYMENT_GATEWAY_ERROR(HttpStatus.BAD_GATEWAY, "error.payment.gateway"),
     PAYMENT_CURRENCY_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "error.payment.currency-not-supported"),
+    COURIER_REQUIRED(HttpStatus.BAD_REQUEST, "error.order.courier-required"),
+    SHIPPING_NOT_AVAILABLE(HttpStatus.BAD_REQUEST, "error.shipping.not-available"),
 
+    COUPON_NOT_FOUND(HttpStatus.NOT_FOUND, "error.coupon.not-found"),
+    COUPON_CODE_DUPLICATED(HttpStatus.CONFLICT, "error.coupon.code-duplicated"),
+    COUPON_NOT_AVAILABLE(HttpStatus.BAD_REQUEST, "error.coupon.not-available"),
+    COUPON_MIN_ORDER_NOT_MET(HttpStatus.BAD_REQUEST, "error.coupon.min-order-not-met"),
+    COUPON_USAGE_EXCEEDED(HttpStatus.CONFLICT, "error.coupon.usage-exceeded"),
     INQUIRY_NOT_FOUND(HttpStatus.NOT_FOUND, "error.inquiry.not-found"),
-    BANNER_NOT_FOUND(HttpStatus.NOT_FOUND, "error.banner.not-found");
-
+    BANNER_NOT_FOUND(HttpStatus.NOT_FOUND, "error.banner.not-found"),
+    NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "error.notice.not-found"),
+    FAQ_NOT_FOUND(HttpStatus.NOT_FOUND, "error.faq.not-found");
     private final HttpStatus status;
     private final String messageKey;
 

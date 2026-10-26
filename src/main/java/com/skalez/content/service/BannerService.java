@@ -70,8 +70,8 @@ public class BannerService {
         if (!request.texts().containsKey(SupportedLanguage.DEFAULT.tag())) {
             throw new BusinessException(ErrorCode.INVALID_INPUT); // 한국어 문구는 필수
         }
-        banner.change(request.position(), request.imageUrl(), request.linkUrl(), request.sortOrder(),
-                request.active(), request.startAt(), request.endAt());
+        banner.change(request.position(), request.imageUrl(), request.mobileImageUrl(), request.linkUrl(), request.target(),
+                request.sortOrder(), request.active(), request.startAt(), request.endAt());
 
         Map<SupportedLanguage, BannerText> texts = new EnumMap<>(SupportedLanguage.class);
         request.texts().forEach((tag, text) ->

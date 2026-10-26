@@ -32,11 +32,11 @@ public class AdminOrderController {
         return adminOrderService.getOrder(orderNumber);
     }
 
-    /** 예: {"status":"SHIPPED","trackingNumber":"1234567890"} */
+    /** 예: {"status":"SHIPPED","courier":"CJ","trackingNumber":"1234567890"} */
     @PatchMapping("/{orderNumber}/status")
     public AdminOrderResponse changeStatus(@PathVariable String orderNumber,
                                            @Valid @RequestBody ChangeOrderStatusRequest request) {
-        return adminOrderService.changeStatus(orderNumber, request.status(), request.trackingNumber());
+        return adminOrderService.changeStatus(orderNumber, request.status(), request.courier(), request.trackingNumber());
     }
 
     @PostMapping("/{orderNumber}/cancel")

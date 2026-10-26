@@ -9,7 +9,7 @@ import com.skalez.global.error.BusinessException;
 import com.skalez.global.error.ErrorCode;
 import com.skalez.global.i18n.SupportedLanguage;
 import com.skalez.global.money.Money;
-import com.skalez.order.domain.ShippingPolicy;
+import com.skalez.shipping.service.ShippingFeeService;
 import com.skalez.product.domain.Product;
 import com.skalez.product.domain.ProductStatus;
 import com.skalez.product.domain.ProductVariant;
@@ -28,6 +28,8 @@ public class CartService {
 
     private final CartItemRepository cartItemRepository;
     private final ProductVariantRepository variantRepository;
+    private final ShippingFeeService shippingFeeService;
+
 
     /** 가격은 담을 때가 아니라 볼 때마다 현재 가격으로 계산한다 */
     public CartResponse getCart(Long memberId, Locale locale) {
@@ -41,7 +43,7 @@ public class CartService {
         Money itemsAmount = items.stream()
                 .map(item -> Money.of(item.lineTotal(), currency))
                 .reduce(Money.zero(currency), Money::plus);
-        Money shippingFee = ShippingPolicy.feeFor(itemsAmount);
+        Money shippingFee = shippingFeeService.estimate(itemsAmount);
 
         return new CartResponse(
                 items,

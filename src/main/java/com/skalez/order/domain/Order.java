@@ -4,6 +4,7 @@ import com.skalez.global.error.BusinessException;
 import com.skalez.global.error.ErrorCode;
 import com.skalez.global.money.Money;
 import com.skalez.product.domain.ProductVariant;
+import com.skalez.shipping.domain.Courier;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -49,11 +50,19 @@ public class Order {
     @Column(nullable = false)
     private long itemsAmount;
 
+    /** 할인코드로 깎은 금액 */
+    @Column(nullable = false)
+    private long discountAmount;
+
     @Column(nullable = false)
     private long shippingFee;
 
+    /** 결제 금액 = 상품 합계 - 할인 + 배송비 */
     @Column(nullable = false)
     private long totalAmount;
+
+    @Column(length = 30)
+    private String couponCode;
 
     @Embedded
     private ShippingAddress shippingAddress;
@@ -64,6 +73,11 @@ public class Order {
     @Column(length = 100)
     private String paymentId; // PG 결제 ID
 
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR) // enum을 varchar로 저장. H2·PostgreSQL 모두 같은 타입이라 Flyway 스키마 하나로 검증된다
+    @Column(length = 20)
+    private Courier courier; // 택배사
+
     @Column(length = 50)
     private String trackingNumber; // 송장번호
 
@@ -73,6 +87,8 @@ public class Order {
     private Instant paidAt;
 
     private Instant shippedAt;
+
+    private Instant deliveredAt;
 
     public Order(Long memberId, String currency, ShippingAddress shippingAddress) {
         Instant now = Instant.now();
@@ -93,15 +109,22 @@ public class Order {
                 productName, variant.getSize(), unitPrice.getAmount(), quantity));
     }
 
-    /** 상품을 다 담은 뒤 호출. 상품 합계 + 배송비 = 결제 금액 */
-    public void calculateAmounts() {
-        Money items = this.items.stream()
+    /** 담은 상품 합계 */
+    public Money itemsMoney() {
+        return items.stream()
                 .map(OrderItem::lineTotal)
                 .reduce(Money.zero(currency), Money::plus);
-        Money fee = ShippingPolicy.feeFor(items);
+    }
+
+    /** 상품을 다 담은 뒤 호출. 할인·배송비는 OrderService가 계산해서 넘긴다 */
+    public void applyAmounts(Money discount, Money shippingFee, String couponCode) {
+        Money items = itemsMoney();
+        Money total = items.minus(discount).plus(shippingFee);
         this.itemsAmount = items.getAmount();
-        this.shippingFee = fee.getAmount();
-        this.totalAmount = items.plus(fee).getAmount();
+        this.discountAmount = discount.getAmount();
+        this.shippingFee = shippingFee.getAmount();
+        this.totalAmount = total.getAmount();
+        this.couponCode = couponCode;
     }
 
     public Money totalMoney() {
@@ -118,10 +141,10 @@ public class Order {
     }
 
     /**
-     * 관리자 배송 처리. 순서: 결제 완료 → 상품 준비 중 → 배송 중(송장번호 필수) → 배송 완료.
+     * 관리자 배송 처리. 순서: 결제 완료 → 상품 준비 중 → 배송 중(택배사·송장번호 필수) → 배송 완료.
      * 상품 준비 중을 건너뛰고 바로 배송 중으로 보내는 것도 허용한다.
      */
-    public void changeStatus(OrderStatus next, String trackingNumber) {
+    public void changeStatus(OrderStatus next, Courier courier, String trackingNumber) {
         boolean allowed = switch (status) {
             case PAID -> next == OrderStatus.PREPARING || next == OrderStatus.SHIPPED;
             case PREPARING -> next == OrderStatus.SHIPPED;
@@ -132,13 +155,25 @@ public class Order {
             throw new BusinessException(ErrorCode.INVALID_ORDER_STATUS);
         }
         if (next == OrderStatus.SHIPPED) {
+            if (courier == null) {
+                throw new BusinessException(ErrorCode.COURIER_REQUIRED);
+            }
             if (trackingNumber == null || trackingNumber.isBlank()) {
                 throw new BusinessException(ErrorCode.TRACKING_NUMBER_REQUIRED);
             }
+            this.courier = courier;
             this.trackingNumber = trackingNumber.trim();
             this.shippedAt = Instant.now();
         }
+        if (next == OrderStatus.DELIVERED) {
+            this.deliveredAt = Instant.now();
+        }
         this.status = next;
+    }
+
+    /** 고객 "배송 조회" 버튼 주소. 출고 전이면 null */
+    public String trackingUrl() {
+        return courier == null || trackingNumber == null ? null : courier.trackingUrl(trackingNumber);
     }
 
     /** 취소는 결제 대기·결제 완료 상태에서만 가능 (배송 준비가 시작되면 불가) */

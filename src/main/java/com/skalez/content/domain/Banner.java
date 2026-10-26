@@ -26,8 +26,16 @@ public class Banner {
     private BannerPosition position;
     @Column(nullable = false, length = 500)
     private String imageUrl;
+    /** 모바일용 이미지 (없으면 imageUrl 사용) */
+    @Column(length = 500)
+    private String mobileImageUrl;
     @Column(length = 500)
     private String linkUrl;
+    /** 어느 페이지에서 보여 줄지 (팝업용) */
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR) // enum을 varchar로 저장. H2·PostgreSQL 모두 같은 타입이라 Flyway 스키마 하나로 검증된다
+    @Column(nullable = false, length = 20)
+    private BannerTarget target = BannerTarget.ALL_PAGES;
     @Column(nullable = false)
     private int sortOrder;
     @Column(nullable = false)
@@ -45,11 +53,13 @@ public class Banner {
         this.imageUrl = imageUrl;
         this.createdAt = Instant.now();
     }
-    public void change(BannerPosition position, String imageUrl, String linkUrl, int sortOrder, boolean active, Instant startAt, Instant endAt){
+    public void change(BannerPosition position, String imageUrl, String mobileImageUrl, String linkUrl, BannerTarget target, int sortOrder, boolean active, Instant startAt, Instant endAt){
         if (startAt != null && endAt != null && !endAt.isAfter(startAt)) {throw new IllegalArgumentException("종료 시각은 시작 시각보다 뒤여야 합니다");}
         this.position = position;
         this.imageUrl = imageUrl;
+        this.mobileImageUrl = mobileImageUrl;
         this.linkUrl = linkUrl;
+        this.target = target == null ? BannerTarget.ALL_PAGES : target;
         this.sortOrder = sortOrder;
         this.active = active;
         this.startAt = startAt;
