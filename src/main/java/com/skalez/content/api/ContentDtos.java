@@ -26,7 +26,9 @@ public final class ContentDtos {
 
     public record BannerTextDto(
             @Size(max = 200) String headline,
-            @Size(max = 500) String subtext
+            @Size(max = 500) String subtext,
+            /** 가격 문구 (선택) */
+            @Size(max = 50) String price
     ) {
     }
 
@@ -46,7 +48,7 @@ public final class ContentDtos {
 
     /** 고객 화면용: 현재 언어 문구만 */
     public record BannerResponse(Long id, String position, String imageUrl, String mobileImageUrl, String linkUrl,
-                                 String target, String headline, String subtext) {
+                                 String target, String headline, String subtext, String price) {
         public static BannerResponse of(Banner banner, SupportedLanguage language) {
             BannerText text = banner.textFor(language);
             return new BannerResponse(
@@ -57,7 +59,8 @@ public final class ContentDtos {
                     banner.getLinkUrl(),
                     banner.getTarget().name(),
                     text == null ? null : text.getHeadline(),
-                    text == null ? null : text.getSubtext()
+                    text == null ? null : text.getSubtext(),
+                    text == null ? null : text.getPrice()
             );
         }
     }
@@ -79,7 +82,7 @@ public final class ContentDtos {
     ) {
         public static AdminBannerResponse from(Banner banner) {
             Map<String, BannerTextDto> texts = new TreeMap<>();
-            banner.getTexts().forEach((tag, text) -> texts.put(tag, new BannerTextDto(text.getHeadline(), text.getSubtext())));
+            banner.getTexts().forEach((tag, text) -> texts.put(tag, new BannerTextDto(text.getHeadline(), text.getSubtext(), text.getPrice())));
             return new AdminBannerResponse(
                     banner.getId(),
                     banner.getPosition().name(),

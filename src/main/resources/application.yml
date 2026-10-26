@@ -5,6 +5,11 @@ spring:
     active: local
   messages:
     basename: i18n/messages
+  # 관리자 이미지 업로드 크기 (한 장 10MB)
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 11MB
     encoding: UTF-8
     fallback-to-system-locale: false
   # DB 스키마는 Flyway 마이그레이션(src/main/resources/db/migration/V{번호}__{설명}.sql)으로만 바꾼다.
@@ -41,6 +46,11 @@ skalez:
   # 관리자 페이지가 다른 도메인이면 환경변수 CORS_ALLOWED_ORIGINS에 함께 넣는다
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:https://skalez.com,https://www.skalez.com}
+  # 관리자가 올린 이미지 저장소. local: 서버 폴더(dir)에 저장하고 BE가 /files/** 로 내보낸다.
+  # 배포 때는 버킷(S3·Lightsail 객체 저장소)으로 바꾼다 (public-url 은 사진 주소 앞부분)
+  storage:
+    dir: ${STORAGE_DIR:./uploads}
+    public-url: ${STORAGE_PUBLIC_URL:http://localhost:8080/files}
   # 고객이 보는 쇼핑몰 주소 (메일 속 링크용)
   site:
     url: ${SITE_URL:https://skalez.com}
@@ -111,8 +121,8 @@ skalez:
   crypto:
     aes-key: bG9jYWwtb25seS1hZXMta2V5LWNoYW5nZS1tZS0zMmI=
   admin:
-    email: admin@skalez.local
-    password: local-admin-pass-1234
+    email: admintest@skalez.local
+    password: admin1234
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3002,http://localhost:3010,https://skalez-*.vercel.app}
   site:

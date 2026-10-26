@@ -75,7 +75,7 @@ public class BannerService {
 
         Map<SupportedLanguage, BannerText> texts = new EnumMap<>(SupportedLanguage.class);
         request.texts().forEach((tag, text) ->
-                texts.put(SupportedLanguage.fromTag(tag), new BannerText(text.headline(), text.subtext())));
+                texts.put(SupportedLanguage.fromTag(tag), new BannerText(text.headline(), text.subtext(), text.price())));
         banner.replaceTexts(texts);
     }
 

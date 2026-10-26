@@ -54,6 +54,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,
                                 "/api/products/**", "/api/categories/**", "/api/banners/**", "/api/site-texts/**",
                                 "/api/notices/**", "/api/faqs/**", "/api/shipping/**").permitAll()
+                        // 관리자가 올린 이미지 (로컬 저장소일 때만 BE가 직접 내보낸다)
+                        .requestMatchers(HttpMethod.GET, "/files/**").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
