@@ -10,6 +10,7 @@ public enum ErrorCode {
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "error.member.not-found"),
     MEMBER_SUSPENDED(HttpStatus.FORBIDDEN, "error.member.suspended"),
     CURRENT_PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "error.member.current-password-mismatch"),
+    PASSWORD_RESET_TOKEN_INVALID(HttpStatus.BAD_REQUEST, "error.member.password-reset-token-invalid"),
     SELF_MODIFICATION(HttpStatus.BAD_REQUEST, "error.member.self-modification"),
 
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "error.category.not-found"),

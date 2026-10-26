@@ -41,6 +41,14 @@ skalez:
   # 관리자 페이지가 다른 도메인이면 환경변수 CORS_ALLOWED_ORIGINS에 함께 넣는다
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:https://skalez.com,https://www.skalez.com}
+  # 고객이 보는 쇼핑몰 주소 (메일 속 링크용)
+  site:
+    url: ${SITE_URL:https://skalez.com}
+  # 메일: log(로컬, 로그에만 남김) | smtp(AWS SES 등). SMTP 접속 정보는 spring.mail.* 환경변수로
+  mail:
+    provider: ${MAIL_PROVIDER:log}
+    from: ${MAIL_FROM:no-reply@skalez.com}
+    from-name: SKALEZ
   # 결제 PG 선택: nice(나이스페이먼츠) | fake(로컬 가짜 결제) | portone(해외용, 연동 전)
   payment:
     provider: ${PAYMENT_PROVIDER:nice}
@@ -55,6 +63,8 @@ skalez:
 # 운영. SPRING_PROFILES_ACTIVE=prod 로 실행한다.
 # 필수 환경변수: DB_URL, DB_USERNAME, DB_PASSWORD, JWT_SECRET, AES_KEY, NICEPAY_CLIENT_KEY, NICEPAY_SECRET_KEY
 # 선택: ADMIN_EMAIL / ADMIN_PASSWORD (첫 관리자), CORS_ALLOWED_ORIGINS, PAYMENT_RESULT_URL
+# 메일(SES SMTP): SPRING_MAIL_HOST=email-smtp.ap-northeast-2.amazonaws.com, SPRING_MAIL_PORT=587,
+#   SPRING_MAIL_USERNAME / SPRING_MAIL_PASSWORD (SES SMTP 자격 증명), MAIL_FROM(인증된 발신 주소), SITE_URL
 spring:
   config:
     activate:
@@ -66,6 +76,10 @@ spring:
     password: ${DB_PASSWORD}
   jpa:
     show-sql: false
+# 운영 메일은 SMTP(SES)가 기본 — 로컬처럼 로그에 재설정 링크를 남기지 않는다
+skalez:
+  mail:
+    provider: ${MAIL_PROVIDER:smtp}
 
 ---
 spring:
@@ -90,10 +104,12 @@ skalez:
     email: admin@skalez.local
     password: local-admin-pass-1234
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3002,https://skalez-*.vercel.app}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3002,http://localhost:3010,https://skalez-*.vercel.app}
+  site:
+    url: ${SITE_URL:http://localhost:3010}
   # 로컬은 기본 가짜 결제. 나이스페이 샌드박스로 해보려면 PAYMENT_PROVIDER=nice + 샌드박스 키 환경변수로 실행
   payment:
     provider: ${PAYMENT_PROVIDER:fake}
     nice:
       api-url: ${NICEPAY_API_URL:https://sandbox-api.nicepay.co.kr}
-      result-redirect-url: ${PAYMENT_RESULT_URL:http://localhost:3002/order/result}
+      result-redirect-url: ${PAYMENT_RESULT_URL:http://localhost:3010/order/result}

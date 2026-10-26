@@ -35,11 +35,12 @@ public class AuthService {
         if (memberRepository.existsByEmail(email)) {
             throw new BusinessException(ErrorCode.EMAIL_DUPLICATED);
         }
-        Member member = new Member(
+        Member member = Member.signup(
                 email,
                 passwordEncoder.encode(request.password()),
                 request.name(),
-                SupportedLanguage.from(locale).tag()
+                SupportedLanguage.from(locale).tag(),
+                Boolean.TRUE.equals(request.marketingConsent())
         );
         return MemberResponse.from(memberRepository.save(member));
     }
@@ -69,6 +70,7 @@ public class AuthService {
         // 지원하지 않는 언어 코드면 INVALID_INPUT
         String language = SupportedLanguage.fromTag(request.language()).tag();
         member.changeProfile(request.name().trim(), language);
+        if (request.marketingConsent() != null) member.changeMarketingConsent(request.marketingConsent());
         return MemberResponse.from(member);
     }
 
@@ -76,7 +78,7 @@ public class AuthService {
     @Transactional
     public void changePassword(Long memberId, ChangePasswordRequest request) {
         Member member = findMember(memberId);
-        if (!passwordEncoder.matches(request.currentPassword(), member.getPassword())) {
+        if (member.needsPasswordSetup() || !passwordEncoder.matches(request.currentPassword(), member.getPassword())) {
             throw new BusinessException(ErrorCode.CURRENT_PASSWORD_MISMATCH);
         }
         member.changePassword(passwordEncoder.encode(request.newPassword()));
@@ -87,10 +89,13 @@ public class AuthService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
-    /** 이메일이 없든 비밀번호가 틀리든 같은 에러를 준다 (가입 여부 노출 방지). 정지된 계정은 로그인 불가 */
+    /**
+     * 이메일이 없든 비밀번호가 틀리든 같은 에러를 준다 (가입 여부 노출 방지). 정지된 계정은 로그인 불가.
+     * 아임웹에서 옮겨 온 회원은 비밀번호가 없어서 같은 에러 → 화면이 '비밀번호 찾기'로 안내한다
+     */
     private Member authenticate(LoginRequest request) {
         Member member = memberRepository.findByEmail(request.email().toLowerCase(Locale.ROOT))
-                .filter(found -> passwordEncoder.matches(request.password(), found.getPassword()))
+                .filter(found -> !found.needsPasswordSetup() && passwordEncoder.matches(request.password(), found.getPassword()))
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
         if (!member.isActive()) {
             throw new BusinessException(ErrorCode.MEMBER_SUSPENDED);
