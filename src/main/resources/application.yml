@@ -49,6 +49,15 @@ skalez:
     provider: ${MAIL_PROVIDER:log}
     from: ${MAIL_FROM:no-reply@skalez.com}
     from-name: SKALEZ
+  # 간편 로그인 키 (비어 있으면 그 로그인은 꺼짐). Redirect URI 는 {SITE_URL}/api/auth/oauth/{kakao|naver}/callback
+  oauth:
+    fake: false
+    kakao:
+      client-id: ${KAKAO_CLIENT_ID:}
+      client-secret: ${KAKAO_CLIENT_SECRET:}
+    naver:
+      client-id: ${NAVER_CLIENT_ID:}
+      client-secret: ${NAVER_CLIENT_SECRET:}
   # 결제 PG 선택: nice(나이스페이먼츠) | fake(로컬 가짜 결제) | portone(해외용, 연동 전)
   payment:
     provider: ${PAYMENT_PROVIDER:nice}
@@ -65,6 +74,7 @@ skalez:
 # 선택: ADMIN_EMAIL / ADMIN_PASSWORD (첫 관리자), CORS_ALLOWED_ORIGINS, PAYMENT_RESULT_URL
 # 메일(SES SMTP): SPRING_MAIL_HOST=email-smtp.ap-northeast-2.amazonaws.com, SPRING_MAIL_PORT=587,
 #   SPRING_MAIL_USERNAME / SPRING_MAIL_PASSWORD (SES SMTP 자격 증명), MAIL_FROM(인증된 발신 주소), SITE_URL
+# 간편 로그인: KAKAO_CLIENT_ID / KAKAO_CLIENT_SECRET, NAVER_CLIENT_ID / NAVER_CLIENT_SECRET (없으면 버튼만 '준비 중')
 spring:
   config:
     activate:
@@ -107,6 +117,9 @@ skalez:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3002,http://localhost:3010,https://skalez-*.vercel.app}
   site:
     url: ${SITE_URL:http://localhost:3010}
+  # 로컬: 키가 없으면 시험용 간편 로그인으로 흐름만 확인 (진짜 카카오·네이버 창은 안 뜸)
+  oauth:
+    fake: true
   # 로컬은 기본 가짜 결제. 나이스페이 샌드박스로 해보려면 PAYMENT_PROVIDER=nice + 샌드박스 키 환경변수로 실행
   payment:
     provider: ${PAYMENT_PROVIDER:fake}

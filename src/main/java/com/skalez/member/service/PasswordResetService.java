@@ -74,7 +74,7 @@ public class PasswordResetService {
     }
 
     private void issue(Member member, Instant now) {
-        boolean setup = member.needsPasswordSetup();
+        boolean setup = member.needsPasswordSetup() && member.getLegacySource() != null;
         Duration ttl = setup ? SETUP_TTL : RESET_TTL;
         String token = newToken();
         tokenRepository.save(new PasswordResetToken(member.getId(), hash(token), now.plus(ttl)));

@@ -11,6 +11,11 @@ public enum ErrorCode {
     MEMBER_SUSPENDED(HttpStatus.FORBIDDEN, "error.member.suspended"),
     CURRENT_PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "error.member.current-password-mismatch"),
     PASSWORD_RESET_TOKEN_INVALID(HttpStatus.BAD_REQUEST, "error.member.password-reset-token-invalid"),
+    SOCIAL_LOGIN_NOT_CONFIGURED(HttpStatus.SERVICE_UNAVAILABLE, "error.social.not-configured"),
+    SOCIAL_LOGIN_FAILED(HttpStatus.BAD_GATEWAY, "error.social.failed"),
+    SOCIAL_EMAIL_REQUIRED(HttpStatus.BAD_REQUEST, "error.social.email-required"),
+    SOCIAL_EMAIL_IN_USE(HttpStatus.CONFLICT, "error.social.email-in-use"),
+    SOCIAL_SIGNUP_EXPIRED(HttpStatus.BAD_REQUEST, "error.social.signup-expired"),
     SELF_MODIFICATION(HttpStatus.BAD_REQUEST, "error.member.self-modification"),
 
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "error.category.not-found"),
