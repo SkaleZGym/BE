@@ -55,7 +55,14 @@ public enum ErrorCode {
     REVIEW_DUPLICATED(HttpStatus.CONFLICT, "error.review.duplicated"),
     BANNER_NOT_FOUND(HttpStatus.NOT_FOUND, "error.banner.not-found"),
     NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "error.notice.not-found"),
-    FAQ_NOT_FOUND(HttpStatus.NOT_FOUND, "error.faq.not-found");
+    FAQ_NOT_FOUND(HttpStatus.NOT_FOUND, "error.faq.not-found"),
+
+    CLAIM_NOT_FOUND(HttpStatus.NOT_FOUND, "error.claim.not-found"),
+    CLAIM_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "error.claim.not-allowed"),
+    CLAIM_ALREADY_OPEN(HttpStatus.CONFLICT, "error.claim.already-open"),
+    CLAIM_INVALID_ITEMS(HttpStatus.BAD_REQUEST, "error.claim.invalid-items"),
+    CLAIM_REFUND_INVALID(HttpStatus.BAD_REQUEST, "error.claim.refund-invalid"),
+    INVALID_CLAIM_STATUS(HttpStatus.CONFLICT, "error.claim.invalid-status");
     private final HttpStatus status;
     private final String messageKey;
 

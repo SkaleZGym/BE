@@ -21,6 +21,7 @@ public class AdminOrderService {
 
     private final OrderRepository orderRepository;
     private final OrderService orderService;
+    private final OrderNotifier orderNotifier;
 
     public PageResponse<AdminOrderResponse> getOrders(OrderStatus status, Pageable pageable) {
         Page<Order> orders = status == null ? orderRepository.findAll(pageable) : orderRepository.findByStatus(status, pageable);
@@ -35,6 +36,9 @@ public class AdminOrderService {
     public AdminOrderResponse changeStatus(String orderNumber, OrderStatus status, Courier courier, String trackingNumber) {
         Order order = find(orderNumber);
         order.changeStatus(status, courier, trackingNumber);
+        if (status == OrderStatus.SHIPPED) {
+            orderNotifier.shipped(order);
+        }
         return AdminOrderResponse.from(order);
     }
 

@@ -37,6 +37,7 @@ public class OrderService {
     private final PaymentService paymentService;
     private final CouponService couponService;
     private final ShippingFeeService shippingFeeService;
+    private final OrderNotifier orderNotifier;
 
     /**
      * 장바구니 → 주문. 이 시점에 재고를 먼저 잡아 두고(차감), 결제 실패·취소 시 되돌린다.
@@ -85,6 +86,7 @@ public class OrderService {
         }
         paymentService.confirm(paymentId, order.getOrderNumber(), order.totalMoney());
         order.markPaid(paymentId);
+        orderNotifier.paid(order);
         return OrderResponse.from(order);
     }
 
@@ -108,6 +110,7 @@ public class OrderService {
         }
         paymentService.confirm(paymentKey, orderNumber, order.totalMoney());
         order.markPaid(paymentKey);
+        orderNotifier.paid(order);
         return order;
     }
 

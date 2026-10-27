@@ -44,6 +44,7 @@ public final class OrderDtos {
     }
 
     public record OrderItemResponse(
+            Long id,
             Long productId,
             Long variantId,
             String productName,
@@ -54,6 +55,7 @@ public final class OrderDtos {
     ) {
         static OrderItemResponse from(OrderItem item) {
             return new OrderItemResponse(
+                    item.getId(),
                     item.getProductId(),
                     item.getVariantId(),
                     item.getProductName(),
