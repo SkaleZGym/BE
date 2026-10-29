@@ -27,4 +27,5 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
               and (:productId is null or r.productId = :productId)
             """)
     Page<Review> search(@Param("status") ReviewStatus status, @Param("rating")Integer rating, @Param("productId") Long productId, Pageable pageable);
+    boolean existsByLegacySourceAndLegacyId(String legacySource, String legacyId);
 }

@@ -19,10 +19,18 @@ public class Review {
     private Long id;
     @Column(nullable = false)
     private Long productId;
-    @Column(nullable = false)
+    /** 비회원이 남긴 이전 쇼핑몰 후기면 null */
     private Long memberId;
-    @Column(nullable = false, length = 30)
+    /** 이전 쇼핑몰 후기면 null */
+    @Column(length = 30)
     private String orderNumber;
+    /** 이전 쇼핑몰 후기의 작성자 이름 (회원 후기는 회원 이름을 쓴다) */
+    @Column(length = 50)
+    private String authorName;
+    @Column(length = 20)
+    private String legacySource;
+    @Column(length = 50)
+    private String legacyId;
     @Column(nullable = false)
     private int rating;
     @Column(nullable = false, length = 1000)
@@ -47,6 +55,16 @@ public class Review {
         this.content = content;
         this.status = ReviewStatus.VISIBLE;
         this.createdAt = Instant.now();
+    }
+    /** 아임웹 등에서 옮겨 온 후기: 작성일을 그대로 두고, 주문 확인 없이 넣는다 */
+    public static Review importLegacy(Long productId, Long memberId, String authorName, int rating, String content,
+                                      Instant createdAt, String legacySource, String legacyId) {
+        Review review = new Review(productId, memberId, null, rating, content);
+        review.authorName = authorName;
+        review.createdAt = createdAt;
+        review.legacySource = legacySource;
+        review.legacyId = legacyId;
+        return review;
     }
     public void changeStatus(ReviewStatus status){this.status = status;}
     public void reply(String reply){

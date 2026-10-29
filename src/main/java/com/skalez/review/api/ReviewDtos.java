@@ -15,7 +15,7 @@ public final class ReviewDtos {
     public record ReplyRequest(@Size(max = 1000) String reply) {}
 
     /** 고객 화면용. 작성자 이름은 가린다 (김**) */
-    public record ReviewResponse(Long id, Long productId, String author, int rating, String content, String reply, Instant createdAt, Instant repliedAt) { public static ReviewResponse of(Review review, String memberName) {return new ReviewResponse(review.getId(), review.getProductId(), mask(memberName), review.getRating(), review.getContent(), review.getReply(), review.getCreatedAt(), review.getRepliedAt());
+    public record ReviewResponse(Long id, Long productId, String author, int rating, String content, String reply, Instant createdAt, Instant repliedAt) { public static ReviewResponse of(Review review, String memberName) {return new ReviewResponse(review.getId(), review.getProductId(), mask(memberName != null ? memberName : review.getAuthorName()), review.getRating(), review.getContent(), review.getReply(), review.getCreatedAt(), review.getRepliedAt());
         }
     }
 
