@@ -36,6 +36,8 @@ public class LocalDataInitializer implements CommandLineRunner {
                 .name(KO, "상의").name(EN, "Tops").name(JA, "トップス").name(ZH_CN, "上衣"));
         save(new Category("MEN_TIGHTS", men, 3)
                 .name(KO, "타이즈").name(EN, "Tights").name(JA, "タイツ").name(ZH_CN, "紧身裤"));
+        save(new Category("MEN_HOODIE", men, 4)
+                .name(KO, "후드").name(EN, "Hoodies").name(JA, "パーカー").name(ZH_CN, "连帽衫"));
         Category women = save(new Category("WOMEN", null, 4)
                 .name(KO, "여성").name(EN, "Women").name(JA, "ウィメンズ").name(ZH_CN, "女装"));
         save(new Category("WOMEN_LEGGINGS", women, 5)

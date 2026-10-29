@@ -7,6 +7,7 @@ import com.skalez.product.domain.Product;
 import com.skalez.product.domain.ProductTranslation;
 import com.skalez.product.domain.ProductVariant;
 
+import java.time.Instant;
 import java.util.List;
 
 /** 가격은 최소 단위 정수 (KRW=원, USD=센트). FE에서 통화에 맞게 표시한다 */
@@ -22,7 +23,10 @@ public record ProductResponse(
         String currency,
         List<Badge> badges,
         boolean soldOut,
-        List<VariantResponse> variants
+        List<VariantResponse> variants,
+        String fit,
+        String fabric,
+        Instant createdAt
 ) {
     public record VariantResponse(Long id, String size, int stock) {
         static VariantResponse from(ProductVariant variant) {
@@ -45,7 +49,10 @@ public record ProductResponse(
                 currency,
                 product.getBadges().stream().sorted().toList(),
                 product.isSoldOut(),
-                product.getVariants().stream().map(VariantResponse::from).toList()
+                product.getVariants().stream().map(VariantResponse::from).toList(),
+                product.getFit(),
+                product.getFabric(),
+                product.getCreatedAt()
         );
     }
 }

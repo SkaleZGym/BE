@@ -42,7 +42,7 @@ public class OrderService {
     /**
      * 장바구니 → 주문. 이 시점에 재고를 먼저 잡아 두고(차감), 결제 실패·취소 시 되돌린다.
      * 금액: 상품 합계 - 할인코드 + 배송비(할인 후 금액 기준 무료배송, 제주·도서산간 추가)
-     * TODO: 결제하지 않고 방치된 주문을 30분 뒤 자동 취소하는 스케줄러 필요
+     * 결제하지 않고 방치된 주문은 UnpaidOrderCancelJob이 30분 뒤 자동 취소한다
      */
     @Transactional
     public OrderResponse placeOrder(Long memberId, PlaceOrderRequest request, Locale locale) {
@@ -119,6 +119,20 @@ public class OrderService {
         Order order = findMyOrder(memberId, orderNumber);
         cancelOrder(order);
         return OrderResponse.from(order);
+    }
+
+    /**
+     * 결제 대기로 오래 남은 주문 자동 취소 (잡아 둔 재고·할인코드를 돌려놓는다).
+     * 그 사이 결제가 끝났으면(상태가 바뀌었으면) 건드리지 않는다. 주문마다 따로 저장해서 하나가 실패해도 나머지는 처리된다
+     */
+    @Transactional
+    public boolean cancelUnpaid(String orderNumber) {
+        Order order = orderRepository.findByOrderNumber(orderNumber).orElse(null);
+        if (order == null || order.getStatus() != OrderStatus.PENDING_PAYMENT) {
+            return false;
+        }
+        cancelOrder(order);
+        return true;
     }
 
     /** 관리자 취소 (품절·고객 요청 등). 규칙은 고객 취소와 같다 */

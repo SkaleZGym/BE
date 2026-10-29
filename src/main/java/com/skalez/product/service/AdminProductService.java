@@ -97,6 +97,7 @@ public class AdminProductService {
 
         request.variants().forEach(v -> product.upsertVariant(v.size(), v.stock()));
         product.replaceBadges(request.badges() == null ? Set.of() : request.badges());
+        product.changeSpec(request.fit(), request.fabric());
         product.changeStatus(request.status());
     }
 

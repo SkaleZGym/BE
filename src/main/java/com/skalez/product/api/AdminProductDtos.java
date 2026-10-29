@@ -29,7 +29,9 @@ public final class AdminProductDtos {
             @NotEmpty Map<String, @Valid TranslationDto> translations,
             @NotEmpty Map<@Pattern(regexp = "[A-Z]{3}") String, @Valid PriceDto> prices,
             @NotEmpty List<@Valid VariantRequest> variants,
-            Set<Badge> badges
+            Set<Badge> badges,
+            @Pattern(regexp = "oversized|semi|muscle|regular|compression|free") String fit,
+            @Pattern(regexp = "cotton|cottonPoly|polyRayon|nylonSpandex|polySilicone") String fabric
     ) {
     }
 
@@ -47,6 +49,8 @@ public final class AdminProductDtos {
             Map<String, PriceDto> prices,
             List<VariantResponse> variants,
             List<Badge> badges,
+            String fit,
+            String fabric,
             Instant createdAt
     ) {
         public static AdminProductResponse from(Product product) {
@@ -70,6 +74,8 @@ public final class AdminProductDtos {
                             .map(v -> new VariantResponse(v.getId(), v.getSize(), v.getStock()))
                             .toList(),
                     product.getBadges().stream().sorted().toList(),
+                    product.getFit(),
+                    product.getFabric(),
                     product.getCreatedAt()
             );
         }

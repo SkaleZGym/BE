@@ -16,6 +16,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByMemberIdOrderByCreatedAtDesc(Long memberId);
     Optional<Order> findByOrderNumber(String orderNumber);
     Page<Order> findByStatus(OrderStatus status, Pageable pageable);
+    /** 결제 대기로 오래 남은 주문 (자동 취소 대상) */
+    List<Order> findByStatusAndCreatedAtBefore(OrderStatus status, Instant createdBefore);
     /** 자동 배송 완료 대상: 배송 중이고 출고된 지 오래된 주문 */
     List<Order> findByStatusAndCurrencyAndShippedAtBefore(OrderStatus status, String currency, Instant shippedBefore);
     /** 후기 작성 자격: 그 상품이 들어 있는 배송 완료 주문 */

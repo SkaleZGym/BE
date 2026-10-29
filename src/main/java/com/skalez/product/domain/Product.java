@@ -40,6 +40,14 @@ public class Product {
     @Column(length = 500)
     private String imageUrl;
 
+    /** 핏 코드 (oversized, semi, muscle, regular, compression, free). 비우면 FE가 카테고리 기본값을 쓴다 */
+    @Column(length = 20)
+    private String fit;
+
+    /** 소재 코드 (cotton, cottonPoly, polyRayon, nylonSpandex, polySilicone). 비우면 카테고리 기본값 */
+    @Column(length = 20)
+    private String fabric;
+
     /** 시장(통화)별 가격. 기존 사이트처럼 KRW와 USD를 따로 정한다 */
     @ElementCollection
     @CollectionTable(name = "product_prices", joinColumns = @JoinColumn(name = "product_id"))
@@ -126,6 +134,11 @@ public class Product {
     public void changeInfo(Category category, String imageUrl) {
         this.category = category;
         this.imageUrl = imageUrl;
+    }
+
+    public void changeSpec(String fit, String fabric) {
+        this.fit = fit;
+        this.fabric = fabric;
     }
 
     public void changeStatus(ProductStatus status) {
