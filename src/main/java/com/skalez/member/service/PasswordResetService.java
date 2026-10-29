@@ -47,6 +47,7 @@ public class PasswordResetService {
     private final PasswordResetTokenRepository tokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final MailClient mailClient;
+    private final RefreshTokenService refreshTokenService;
     private final SiteProperties site;
 
     @Transactional
@@ -71,6 +72,8 @@ public class PasswordResetService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.PASSWORD_RESET_TOKEN_INVALID));
         member.changePassword(passwordEncoder.encode(newPassword));
         tokenRepository.expireAll(member.getId(), now);
+        // 비밀번호를 새로 정했으니 모든 기기의 로그인 유지를 끊는다
+        refreshTokenService.revokeAll(member.getId());
     }
 
     private void issue(Member member, Instant now) {

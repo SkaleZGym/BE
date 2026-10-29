@@ -39,7 +39,9 @@ public final class AuthDtos {
             @NotBlank @Size(max = 100) String token,
             @NotBlank @Size(min = 8, max = 64) String newPassword
     ){}
-    public record TokenResponse(String accessToken, String tokenType, long expiresIn){}
+    /** refreshToken·refreshExpiresIn: 로그인 유지용 (관리자 로그인은 없음 → null) */
+    public record TokenResponse(String accessToken, String tokenType, long expiresIn, String refreshToken, Long refreshExpiresIn){}
+    public record RefreshRequest(@NotBlank String refreshToken){}
     public record MemberResponse(Long id, String email, String name, String role, String language, boolean marketingConsent){
         public static MemberResponse from(Member member){return new MemberResponse(member.getId(), member.getEmail(), member.getName(), member.getRole().name(),member.getLanguage(), member.isMarketingConsent());
         }

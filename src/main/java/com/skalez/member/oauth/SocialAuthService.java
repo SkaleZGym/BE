@@ -4,8 +4,8 @@ import com.skalez.global.error.BusinessException;
 import com.skalez.global.error.ErrorCode;
 import com.skalez.global.i18n.SupportedLanguage;
 import com.skalez.global.mail.SiteProperties;
-import com.skalez.global.security.JwtTokenProvider;
 import com.skalez.member.api.AuthDtos.TokenResponse;
+import com.skalez.member.service.RefreshTokenService;
 import com.skalez.member.domain.Member;
 import com.skalez.member.domain.MemberSocialAccount;
 import com.skalez.member.domain.SocialProvider;
@@ -48,7 +48,7 @@ public class SocialAuthService {
     private final MemberRepository memberRepository;
     private final SocialAccountRepository socialAccountRepository;
     private final SocialSignupTicketRepository ticketRepository;
-    private final JwtTokenProvider tokenProvider;
+    private final RefreshTokenService refreshTokenService;
     private final SiteProperties site;
 
     /** 로그인 결과: 바로 로그인(token) 또는 약관 동의가 필요한 가입(ticket) */
@@ -133,7 +133,7 @@ public class SocialAuthService {
 
     private TokenResponse issue(Member member) {
         if (!member.isActive()) throw new BusinessException(ErrorCode.MEMBER_SUSPENDED);
-        return new TokenResponse(tokenProvider.createAccessToken(member), "Bearer", tokenProvider.accessTokenTtlSeconds());
+        return refreshTokenService.issueWithAccess(member);
     }
 
     private static String randomToken() {
