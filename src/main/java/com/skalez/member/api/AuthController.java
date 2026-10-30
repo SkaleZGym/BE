@@ -10,6 +10,7 @@ import com.skalez.member.api.AuthDtos.RefreshRequest;
 import com.skalez.member.api.AuthDtos.SignupRequest;
 import com.skalez.member.api.AuthDtos.TokenResponse;
 import com.skalez.member.api.AuthDtos.UpdateMeRequest;
+import com.skalez.member.api.AuthDtos.WithdrawRequest;
 import com.skalez.member.service.AuthService;
 import com.skalez.member.service.PasswordResetService;
 import com.skalez.member.service.RefreshTokenService;
@@ -57,6 +58,10 @@ public class AuthController {
     @PutMapping("/api/members/me/password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void changePassword(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody ChangePasswordRequest request){authService.changePassword(LoginMember.id(jwt), request);}
+    /** 마이페이지: 회원 탈퇴 (개인정보 삭제 요청). 개인정보는 바로 지우고, 주문 기록은 법정 보관 기간 동안 비식별 상태로 남는다 */
+    @PostMapping("/api/members/me/withdraw")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void withdraw(@AuthenticationPrincipal Jwt jwt, @RequestBody(required = false) WithdrawRequest request){authService.withdraw(LoginMember.id(jwt), request == null ? null : request.password());}
 
     //관리자
     @PostMapping("/api/admin/auth/login")

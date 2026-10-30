@@ -134,4 +134,27 @@ public class Member {
     public void changePassword(String encodedPassword) {
         this.password = encodedPassword;
     }
+
+    /** 탈퇴한 회원의 이메일 표시 (로그인·재가입에 쓸 수 없는 주소) */
+    public static final String WITHDRAWN_EMAIL_DOMAIN = "@withdrawn.skalez.invalid";
+
+    /**
+     * 회원 탈퇴: 개인정보(이메일·이름·연락처·비밀번호·동의)는 바로 지우고 행 자체는 남긴다.
+     * 주문·결제 기록은 전자상거래법에 따라 5년 보관해야 해서 회원 번호로 이어진 주문은 그대로 두되, 누구인지 알 수 없게 된다.
+     * 상태는 SUSPENDED 로 두어 로그인할 수 없다 (탈퇴 전용 상태는 DB 제약을 바꿔야 해서 다음 마이그레이션에서)
+     */
+    public void withdraw() {
+        this.email = "withdrawn-" + id + WITHDRAWN_EMAIL_DOMAIN;
+        this.password = null;
+        this.name = "탈퇴회원";
+        this.phone = null;
+        this.status = MemberStatus.SUSPENDED;
+        this.marketingConsent = false;
+        this.marketingConsentAt = null;
+        this.legacyId = null;
+    }
+
+    public boolean isWithdrawn() {
+        return email != null && email.endsWith(WITHDRAWN_EMAIL_DOMAIN);
+    }
 }

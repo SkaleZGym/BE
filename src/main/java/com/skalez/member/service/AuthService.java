@@ -14,6 +14,9 @@ import com.skalez.member.api.AuthDtos.UpdateMeRequest;
 import com.skalez.member.domain.Member;
 import com.skalez.member.domain.Role;
 import com.skalez.member.repository.MemberRepository;
+import com.skalez.member.repository.SocialAccountRepository;
+import com.skalez.cart.repository.CartItemRepository;
+import com.skalez.wish.repository.WishItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -31,6 +34,9 @@ public class AuthService {
     private final JwtTokenProvider tokenProvider;
     private final RefreshTokenService refreshTokenService;
     private final LoginAttemptLimiter loginAttemptLimiter;
+    private final SocialAccountRepository socialAccountRepository;
+    private final CartItemRepository cartItemRepository;
+    private final WishItemRepository wishItemRepository;
 
     @Transactional
     public MemberResponse signup(SignupRequest request, Locale locale) {
@@ -88,6 +94,27 @@ public class AuthService {
         }
         member.changePassword(passwordEncoder.encode(request.newPassword()));
         // 다른 기기에 남은 로그인 유지도 끊는다 (지금 기기는 화면에서 다시 로그인)
+        refreshTokenService.revokeAll(member.getId());
+    }
+
+    /**
+     * 회원 탈퇴(개인정보 삭제 요청). 비밀번호가 있는 계정은 현재 비밀번호를 확인한다.
+     * 장바구니·위시리스트·간편 로그인 연결·로그인 유지 토큰은 지우고, 회원 행은 비식별화해 남긴다 (주문 기록 보관용)
+     */
+    @Transactional
+    public void withdraw(Long memberId, String password) {
+        Member member = findMember(memberId);
+        if (member.getRole() == Role.ADMIN) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
+        if (!member.needsPasswordSetup() && (password == null || !passwordEncoder.matches(password, member.getPassword()))) {
+            throw new BusinessException(ErrorCode.CURRENT_PASSWORD_MISMATCH);
+        }
+        socialAccountRepository.deleteAll(socialAccountRepository.findByMemberId(member.getId()));
+        cartItemRepository.deleteAll(cartItemRepository.findByMemberIdOrderByCreatedAtAsc(member.getId()));
+        wishItemRepository.deleteAll(wishItemRepository.findByMemberIdOrderByCreatedAtDesc(member.getId()));
+        member.withdraw();
+        // revokeAll 은 영속성 컨텍스트를 비우므로(flush 후 clear) 회원 변경 뒤에 맨 마지막으로 부른다
         refreshTokenService.revokeAll(member.getId());
     }
 

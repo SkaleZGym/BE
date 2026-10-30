@@ -13,11 +13,17 @@ public final class AuthDtos {
             @NotBlank @Email @Size(max = 100) String email,
             @NotBlank @Size(min = 8, max = 64) String password,
             @NotBlank @Size(max = 50) String name,
-            /** 이용약관·개인정보 수집 동의 (필수) */
+            /** 이용약관 동의 (필수) */
             @NotNull @AssertTrue Boolean agreeTerms,
+            /** 개인정보 수집·이용 동의 (필수). 약관과 따로 받는다 (개인정보 보호법: 동의는 항목별로) */
+            @NotNull @AssertTrue Boolean agreePrivacy,
+            /** 만 14세 이상 확인 (필수). 14세 미만은 법정대리인 동의가 필요해서 가입을 받지 않는다 */
+            @NotNull @AssertTrue Boolean over14,
             /** 마케팅 수신 동의 (선택, 없으면 미동의) */
             Boolean marketingConsent
             ){}
+    /** 회원 탈퇴. 비밀번호가 있는 계정은 현재 비밀번호를 한 번 더 확인한다 (간편가입만 한 계정은 비워 보낸다) */
+    public record WithdrawRequest(String password){}
     public record LoginRequest(
             @NotBlank @Email String email,
             @NotBlank String password

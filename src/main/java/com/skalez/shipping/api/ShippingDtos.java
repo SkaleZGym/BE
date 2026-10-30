@@ -25,6 +25,10 @@ public final class ShippingDtos {
         }
     }
 
+    /** 결제 화면 배송비 미리 계산. remoteArea: JEJU | ISLAND | null */
+    public record ShippingQuoteResponse(String currency, long fee, String remoteArea) {
+    }
+
     public record CourierResponse(String code, String name) {
         public static CourierResponse from(Courier courier) {
             return new CourierResponse(courier.name(), courier.displayName());

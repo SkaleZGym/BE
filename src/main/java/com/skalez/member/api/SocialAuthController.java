@@ -32,7 +32,8 @@ public class SocialAuthController {
     /** token 이 있으면 바로 로그인, ticket 이 있으면 약관 동의 화면으로 */
     public record LoginResponse(TokenResponse token, String ticket, String email, String name) {}
     public record SignupRequest(@NotBlank @Size(max = 100) String ticket, @Size(max = 50) String name,
-                                @NotNull @AssertTrue Boolean agreeTerms, Boolean marketingConsent) {}
+                                @NotNull @AssertTrue Boolean agreeTerms, @NotNull @AssertTrue Boolean agreePrivacy,
+                                @NotNull @AssertTrue Boolean over14, Boolean marketingConsent) {}
 
     /** 어떤 간편 로그인이 켜져 있는지 (FE 버튼 표시용) */
     @GetMapping("/providers")
