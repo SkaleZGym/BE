@@ -45,6 +45,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/error").permitAll()
+                        // 서버 상태 확인 (로드밸런서·모니터링용). 상세 내용은 application.yml 에서 감춰 둔다
+                        .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         // 나이스페이 결제창이 결과를 보내는 주소 (로그인 토큰 없음, 서명으로 검증)
                         .requestMatchers(HttpMethod.POST, "/api/payments/nice/return").permitAll()
