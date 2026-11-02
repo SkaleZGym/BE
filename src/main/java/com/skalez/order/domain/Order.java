@@ -57,7 +57,15 @@ public class Order {
     @Column(nullable = false)
     private long shippingFee;
 
-    /** 결제 금액 = 상품 합계 - 할인 + 배송비 */
+    /** 이 주문에 쓴 적립금 (원화 주문만) */
+    @Column(nullable = false)
+    private long pointsUsed;
+
+    /** 배송 완료 때 준 적립금. 0 이 아니면 이미 준 주문이라 다시 주지 않는다 (반품되면 그만큼 줄어든다) */
+    @Column(nullable = false)
+    private long pointsEarned;
+
+    /** 결제 금액 = 상품 합계 - 할인 - 적립금 + 배송비 */
     @Column(nullable = false)
     private long totalAmount;
 
@@ -116,15 +124,27 @@ public class Order {
                 .reduce(Money.zero(currency), Money::plus);
     }
 
-    /** 상품을 다 담은 뒤 호출. 할인·배송비는 OrderService가 계산해서 넘긴다 */
-    public void applyAmounts(Money discount, Money shippingFee, String couponCode) {
+    /** 상품을 다 담은 뒤 호출. 할인·배송비·적립금은 OrderService가 계산·확인해서 넘긴다 */
+    public void applyAmounts(Money discount, Money shippingFee, Money points, String couponCode) {
         Money items = itemsMoney();
-        Money total = items.minus(discount).plus(shippingFee);
+        // 적립금은 배송비까지 낼 수 있어서 배송비를 더한 뒤에 뺀다
+        Money total = items.minus(discount).plus(shippingFee).minus(points);
         this.itemsAmount = items.getAmount();
         this.discountAmount = discount.getAmount();
         this.shippingFee = shippingFee.getAmount();
+        this.pointsUsed = points.getAmount();
         this.totalAmount = total.getAmount();
         this.couponCode = couponCode;
+    }
+
+    /** 적립 기준 금액: 실제로 돈을 낸 상품 금액 (배송비 제외, 할인·적립금 사용분 제외) */
+    public long pointBaseAmount() {
+        return Math.max(0, itemsAmount - discountAmount - pointsUsed);
+    }
+
+    /** 배송 완료 적립·반품 회수 결과를 남긴다 */
+    public void markPointsEarned(long points) {
+        this.pointsEarned = Math.max(0, points);
     }
 
     public Money totalMoney() {

@@ -6,6 +6,7 @@ import com.skalez.member.api.AdminMemberDtos.ImportResult;
 import com.skalez.member.api.AdminMemberDtos.ImportResult.Failure;
 import com.skalez.member.domain.Member;
 import com.skalez.member.repository.MemberRepository;
+import com.skalez.point.service.PointService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,7 @@ public class MemberImportService {
     private static final Pattern EMAIL = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
 
     private final MemberRepository memberRepository;
+    private final PointService pointService;
 
     @Transactional
     public ImportResult importMembers(ImportMembersRequest request) {
@@ -52,8 +54,12 @@ public class MemberImportService {
             }
             String name = row.name() == null || row.name().isBlank() ? email.substring(0, email.indexOf('@')) : row.name().trim();
             String phone = row.phone() == null || row.phone().isBlank() ? null : row.phone().trim();
-            memberRepository.save(Member.importLegacy(Member.LEGACY_IMWEB, blankToNull(row.legacyId()), email, truncate(name, 50), phone,
+            Member member = memberRepository.save(Member.importLegacy(Member.LEGACY_IMWEB, blankToNull(row.legacyId()), email, truncate(name, 50), phone,
                     row.joinedAt(), Boolean.TRUE.equals(row.marketingConsent()), row.marketingConsentAt()));
+            // 아임웹에서 쓰던 적립금을 그대로 옮긴다 (이미 있는 회원은 위에서 건너뛰어서 두 번 들어가지 않는다)
+            if (row.points() != null && row.points() > 0) {
+                pointService.migrate(member, row.points());
+            }
             created++;
         }
         return new ImportResult(created, skipped, failures);

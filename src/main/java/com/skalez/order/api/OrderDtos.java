@@ -4,6 +4,7 @@ import com.skalez.order.domain.Order;
 import com.skalez.order.domain.OrderItem;
 import com.skalez.order.domain.ShippingAddress;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -31,10 +32,11 @@ public final class OrderDtos {
         }
     }
 
-    /** 장바구니에 담긴 상품 전체로 주문한다. couponCode는 선택 */
+    /** 장바구니에 담긴 상품 전체로 주문한다. couponCode·points(쓸 적립금, 원)는 선택 */
     public record PlaceOrderRequest(
             @Valid @NotNull ShippingAddressRequest shippingAddress,
-            @Size(max = 30) String couponCode
+            @Size(max = 30) String couponCode,
+            @Min(0) Long points
     ) {
     }
 
@@ -74,6 +76,8 @@ public final class OrderDtos {
             long itemsAmount,
             long discountAmount,
             long shippingFee,
+            long pointsUsed,
+            long pointsEarned,
             long totalAmount,
             String couponCode,
             String courier,
@@ -93,6 +97,8 @@ public final class OrderDtos {
                     order.getItemsAmount(),
                     order.getDiscountAmount(),
                     order.getShippingFee(),
+                    order.getPointsUsed(),
+                    order.getPointsEarned(),
                     order.getTotalAmount(),
                     order.getCouponCode(),
                     order.getCourier() == null ? null : order.getCourier().displayName(),

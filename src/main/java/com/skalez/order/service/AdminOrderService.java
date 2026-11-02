@@ -7,6 +7,7 @@ import com.skalez.order.api.AdminOrderDtos.AdminOrderResponse;
 import com.skalez.order.domain.Order;
 import com.skalez.order.domain.OrderStatus;
 import com.skalez.order.repository.OrderRepository;
+import com.skalez.point.service.PointService;
 import com.skalez.shipping.domain.Courier;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,6 +23,7 @@ public class AdminOrderService {
     private final OrderRepository orderRepository;
     private final OrderService orderService;
     private final OrderNotifier orderNotifier;
+    private final PointService pointService;
 
     public PageResponse<AdminOrderResponse> getOrders(OrderStatus status, Pageable pageable) {
         Page<Order> orders = status == null ? orderRepository.findAll(pageable) : orderRepository.findByStatus(status, pageable);
@@ -38,6 +40,9 @@ public class AdminOrderService {
         order.changeStatus(status, courier, trackingNumber);
         if (status == OrderStatus.SHIPPED) {
             orderNotifier.shipped(order);
+        }
+        if (status == OrderStatus.DELIVERED) {
+            pointService.earnForDelivery(order); // 배송 완료 = 적립
         }
         return AdminOrderResponse.from(order);
     }

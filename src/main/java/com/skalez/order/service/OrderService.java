@@ -15,6 +15,7 @@ import com.skalez.order.domain.OrderStatus;
 import com.skalez.order.domain.ShippingAddress;
 import com.skalez.order.repository.OrderRepository;
 import com.skalez.payment.service.PaymentService;
+import com.skalez.point.service.PointService;
 import com.skalez.product.domain.Product;
 import com.skalez.product.domain.ProductVariant;
 import com.skalez.product.repository.ProductVariantRepository;
@@ -38,10 +39,11 @@ public class OrderService {
     private final CouponService couponService;
     private final ShippingFeeService shippingFeeService;
     private final OrderNotifier orderNotifier;
+    private final PointService pointService;
 
     /**
      * 장바구니 → 주문. 이 시점에 재고를 먼저 잡아 두고(차감), 결제 실패·취소 시 되돌린다.
-     * 금액: 상품 합계 - 할인코드 + 배송비(할인 후 금액 기준 무료배송, 제주·도서산간 추가)
+     * 금액: 상품 합계 - 할인코드 + 배송비(할인 후 금액 기준 무료배송, 제주·도서산간 추가) - 적립금
      * 결제하지 않고 방치된 주문은 UnpaidOrderCancelJob이 30분 뒤 자동 취소한다
      */
     @Transactional
@@ -70,7 +72,11 @@ public class OrderService {
                 ? Money.zero(currency)
                 : couponService.redeem(memberId, couponCode, items, order.getOrderNumber());
         Money shippingFee = shippingFeeService.feeFor(items.minus(discount), address.getCountryCode(), address.getPostalCode());
-        order.applyAmounts(discount, shippingFee, couponCode == null ? null : couponCode.toUpperCase(Locale.ROOT));
+        // 적립금: 잔액·최소 사용액·최소 결제액을 PointService 가 확인하고 차감한다 (안 되면 주문 전체가 취소된다)
+        long points = request.points() == null ? 0 : request.points();
+        long payable = items.minus(discount).plus(shippingFee).getAmount();
+        pointService.use(memberId, points, payable, currency, order.getOrderNumber());
+        order.applyAmounts(discount, shippingFee, Money.of(points, currency), couponCode == null ? null : couponCode.toUpperCase(Locale.ROOT));
 
         orderRepository.save(order);
         cartItemRepository.deleteAll(cartItems);
@@ -169,6 +175,8 @@ public class OrderService {
         if (order.getCouponCode() != null) {
             couponService.release(order.getOrderNumber());
         }
+        // 쓴 적립금 돌려주기 (취소는 배송 전이라 받은 적립금은 아직 없다)
+        pointService.restoreUsed(order.getMemberId(), order.getPointsUsed(), order.getOrderNumber());
     }
 
     /** 다른 회원의 주문번호를 넣어도 "없음"으로 보이게 한다 */

@@ -48,8 +48,9 @@ public final class AuthDtos {
     /** refreshToken·refreshExpiresIn: 로그인 유지용 (관리자 로그인은 없음 → null) */
     public record TokenResponse(String accessToken, String tokenType, long expiresIn, String refreshToken, Long refreshExpiresIn){}
     public record RefreshRequest(@NotBlank String refreshToken){}
-    public record MemberResponse(Long id, String email, String name, String role, String language, boolean marketingConsent){
-        public static MemberResponse from(Member member){return new MemberResponse(member.getId(), member.getEmail(), member.getName(), member.getRole().name(),member.getLanguage(), member.isMarketingConsent());
+    /** pointBalance: 적립금 잔액 (결제 화면·마이페이지 표시용) */
+    public record MemberResponse(Long id, String email, String name, String role, String language, boolean marketingConsent, long pointBalance){
+        public static MemberResponse from(Member member){return new MemberResponse(member.getId(), member.getEmail(), member.getName(), member.getRole().name(),member.getLanguage(), member.isMarketingConsent(), member.getPointBalance());
         }
     }
 }

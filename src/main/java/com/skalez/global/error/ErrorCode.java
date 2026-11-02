@@ -50,6 +50,8 @@ public enum ErrorCode {
     COUPON_NOT_AVAILABLE(HttpStatus.BAD_REQUEST, "error.coupon.not-available"),
     COUPON_MIN_ORDER_NOT_MET(HttpStatus.BAD_REQUEST, "error.coupon.min-order-not-met"),
     COUPON_USAGE_EXCEEDED(HttpStatus.CONFLICT, "error.coupon.usage-exceeded"),
+    POINT_NOT_USABLE(HttpStatus.BAD_REQUEST, "error.point.not-usable"),
+    POINT_NOT_ENOUGH(HttpStatus.BAD_REQUEST, "error.point.not-enough"),
     INQUIRY_NOT_FOUND(HttpStatus.NOT_FOUND, "error.inquiry.not-found"),
     INQUIRY_ALREADY_ANSWERED(HttpStatus.CONFLICT, "error.inquiry.already-answered"),
     REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "error.review.not-found"),

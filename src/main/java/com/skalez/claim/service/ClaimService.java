@@ -18,6 +18,7 @@ import com.skalez.order.domain.OrderItem;
 import com.skalez.order.domain.OrderStatus;
 import com.skalez.order.repository.OrderRepository;
 import com.skalez.payment.service.PaymentService;
+import com.skalez.point.service.PointService;
 import com.skalez.product.repository.ProductVariantRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -50,6 +51,7 @@ public class ClaimService {
     private final OrderRepository orderRepository;
     private final ProductVariantRepository variantRepository;
     private final PaymentService paymentService;
+    private final PointService pointService;
 
     @Transactional
     public ClaimResponse request(Long memberId, CreateClaimRequest request) {
@@ -131,6 +133,8 @@ public class ClaimService {
         if (refundAmount > 0) {
             paymentService.refund(order.getPaymentId(), order.getOrderNumber(),
                     Money.of(refundAmount, order.getCurrency()), "반품");
+            // 배송 완료 때 준 적립금 중 환불한 비율만큼 회수
+            pointService.reclaimForReturn(order, refundAmount);
         }
         for (ClaimItem item : claim.getItems()) {
             OrderItem orderItem = findOrderItem(order, item.getOrderItemId());

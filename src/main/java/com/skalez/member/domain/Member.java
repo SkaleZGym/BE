@@ -1,5 +1,7 @@
 package com.skalez.member.domain;
 
+import com.skalez.global.error.BusinessException;
+import com.skalez.global.error.ErrorCode;
 import com.skalez.global.security.crypto.EncryptedStringConverter;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -60,6 +62,10 @@ public class Member {
 
     /** 이용약관·개인정보 수집 동의 시각 (새 사이트 가입자). 이전 회원은 아임웹에서 이미 동의 → null */
     private Instant termsAgreedAt;
+
+    /** 적립금 잔액 (원). 바뀔 때마다 point_histories 에 한 줄씩 남는다 — 바꾸는 건 PointService 만 */
+    @Column(nullable = false)
+    private long pointBalance;
 
     @Column(length = 20)
     private String legacySource; // null = 새 사이트 가입, IMWEB = 아임웹 이전
@@ -135,6 +141,14 @@ public class Member {
         this.password = encodedPassword;
     }
 
+    /** 적립금 늘리기(+)·줄이기(-). 잔액이 모자라면 POINT_NOT_ENOUGH — 기록은 PointService 가 남긴다 */
+    public void changePoints(long delta) {
+        if (pointBalance + delta < 0) {
+            throw new BusinessException(ErrorCode.POINT_NOT_ENOUGH);
+        }
+        this.pointBalance += delta;
+    }
+
     /** 탈퇴한 회원의 이메일 표시 (로그인·재가입에 쓸 수 없는 주소) */
     public static final String WITHDRAWN_EMAIL_DOMAIN = "@withdrawn.skalez.invalid";
 
@@ -152,6 +166,7 @@ public class Member {
         this.marketingConsent = false;
         this.marketingConsentAt = null;
         this.legacyId = null;
+        this.pointBalance = 0; // 탈퇴하면 적립금도 사라진다 (탈퇴 안내에 적어 둠)
     }
 
     public boolean isWithdrawn() {

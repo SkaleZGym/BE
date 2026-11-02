@@ -3,6 +3,7 @@ package com.skalez.shipping.service;
 import com.skalez.order.domain.Order;
 import com.skalez.order.domain.OrderStatus;
 import com.skalez.order.repository.OrderRepository;
+import com.skalez.point.service.PointService;
 import com.skalez.shipping.repository.ShippingSettingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ import java.util.List;
 public class DeliveryAutoCompleteJob {
     private final OrderRepository orderRepository;
     private final ShippingSettingRepository settingRepository;
+    private final PointService pointService;
     @Scheduled(cron = "0 0 4 * * *", zone = "Asia/Seoul")
     @Transactional
     public int run(){
@@ -28,7 +30,10 @@ public class DeliveryAutoCompleteJob {
         for(var setting : settingRepository.findAll()){
             Instant before = now.minus(Duration.ofDays(setting.getAutoDeliverDays()));
             List<Order> orders = orderRepository.findByStatusAndCurrencyAndShippedAtBefore(OrderStatus.SHIPPED, setting.getCurrency(), before);
-            orders.forEach(order -> order.changeStatus(OrderStatus.DELIVERED, null, null));
+            orders.forEach(order -> {
+                order.changeStatus(OrderStatus.DELIVERED, null, null);
+                pointService.earnForDelivery(order); // 배송 완료 = 적립
+            });
             done += orders.size();
         }
         if(done > 0){
