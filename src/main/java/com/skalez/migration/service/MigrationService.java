@@ -78,21 +78,17 @@ public class MigrationService {
                 failures.add(new Failure(i, legacyId, "상품을 찾을 수 없어요"));
                 continue;
             }
-            Long memberId = memberRepository.findByEmail(normalizeEmail(row.email()) == null ? "" : normalizeEmail(row.email()))
-                    .map(Member::getId)
-                    .orElse(null);
+            Long memberId = memberRepository.findByEmail(normalizeEmail(row.email()) == null ? "" : normalizeEmail(row.email())).map(Member::getId).orElse(null);
             if (memberId != null && reviewRepository.existsByMemberIdAndProductId(memberId, row.productId())) {
                 skipped++;
                 continue;
             }
-            reviewRepository.save(Review.importLegacy(row.productId(), memberId, blankToNull(row.authorName()), row.rating(),
-                    row.content().trim(), row.createdAt() == null ? Instant.now() : row.createdAt(), LegacyOrder.IMWEB, legacyId));
+            reviewRepository.save(Review.importLegacy(row.productId(), memberId, blankToNull(row.authorName()), row.rating(), row.content().trim(), row.createdAt() == null ? Instant.now() : row.createdAt(), LegacyOrder.IMWEB, legacyId));
             created++;
         }
         return new ImportResult(created, skipped, failures);
     }
 
-    /** 로그인한 회원의 이전 쇼핑몰 주문 (회원 이메일 기준) */
     public List<LegacyOrderResponse> myLegacyOrders(Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
