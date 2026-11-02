@@ -28,7 +28,7 @@ class PasswordResetServiceTest {
 
     @Test
     void legacyMemberSetsPasswordWithMailToken() {
-        Member member = memberRepository.save(Member.importLegacy(Member.LEGACY_IMWEB, "m1", "legacy.test@skalez.test", "기존회원", null, null, false, null));
+        Member member = memberRepository.save(Member.importLegacy(Member.LEGACY_IMWEB, "m1", "legacy.test@skalez.test", "기존회원", null, "ko", null, false, null));
         assertThat(member.needsPasswordSetup()).isTrue();
         tokenRepository.save(new PasswordResetToken(member.getId(), PasswordResetService.hash("mail-token"), Instant.now().plusSeconds(600)));
 
@@ -44,7 +44,7 @@ class PasswordResetServiceTest {
 
     @Test
     void expiredTokenIsRejected() {
-        Member member = memberRepository.save(Member.importLegacy(Member.LEGACY_IMWEB, null, "legacy.expired@skalez.test", "기존회원", null, null, false, null));
+        Member member = memberRepository.save(Member.importLegacy(Member.LEGACY_IMWEB, null, "legacy.expired@skalez.test", "기존회원", null, "ko", null, false, null));
         tokenRepository.save(new PasswordResetToken(member.getId(), PasswordResetService.hash("old-token"), Instant.now().minusSeconds(1)));
 
         assertThatThrownBy(() -> passwordResetService.confirm("old-token", "New-pass-123")).isInstanceOf(BusinessException.class);

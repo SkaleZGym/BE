@@ -94,9 +94,9 @@ public class Member {
     }
 
     /** 아임웹에서 옮겨 온 회원. 비밀번호 없이 만들고, 가입일은 아임웹 가입일을 그대로 쓴다 */
-    public static Member importLegacy(String source, String legacyId, String email, String name, String phone,
+    public static Member importLegacy(String source, String legacyId, String email, String name, String phone, String language,
                                       Instant joinedAt, boolean marketingConsent, Instant marketingConsentAt) {
-        Member member = new Member(email, null, name, "ko");
+        Member member = new Member(email, null, name, language);
         member.legacySource = source;
         member.legacyId = legacyId;
         member.phone = phone;

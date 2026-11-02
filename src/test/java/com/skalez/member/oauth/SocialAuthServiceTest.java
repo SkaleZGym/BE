@@ -50,7 +50,7 @@ class SocialAuthServiceTest {
 
     @Test
     void verifiedEmailLinksToExistingMember() {
-        Member legacy = memberRepository.save(Member.importLegacy(Member.LEGACY_IMWEB, null, "naver.tester@skalez.test", "아임웹회원", null, null, false, null));
+        Member legacy = memberRepository.save(Member.importLegacy(Member.LEGACY_IMWEB, null, "naver.tester@skalez.test", "아임웹회원", null, "ko", null, false, null));
 
         SocialAuthService.Result result = socialAuthService.login(SocialProvider.NAVER, "code", "http://localhost:3010/api/auth/oauth/naver/callback", "state");
 

@@ -15,8 +15,11 @@ public final class AdminMemberDtos {
     public record ChangeStatusRequest(@NotNull MemberStatus status){}
     public record ChangeRoleRequest(@NotNull Role role){}
 
-    /** 아임웹 회원 한 명. joinedAt·marketingConsentAt 은 ISO 시각 (예: 2024-03-01T00:00:00Z). points: 아임웹 보유 적립금 (없으면 0) */
-    public record ImportMemberRow(String email, String name, String phone, Instant joinedAt, Boolean marketingConsent, Instant marketingConsentAt, String legacyId, Long points){}
+    /**
+     * 아임웹 회원 한 명. joinedAt·marketingConsentAt 은 ISO 시각 (예: 2024-03-01T00:00:00Z). points: 아임웹 보유 적립금 (없으면 0).
+     * language: 아임웹 '언어' 칸 그대로 (KR·EN 등, 없으면 한국어)
+     */
+    public record ImportMemberRow(String email, String name, String phone, Instant joinedAt, Boolean marketingConsent, Instant marketingConsentAt, String legacyId, Long points, String language){}
     /** 한 번에 1,000명까지. 관리자 화면이 나눠서 여러 번 보낸다 */
     public record ImportMembersRequest(@NotEmpty @Size(max = 1000) List<ImportMemberRow> members){}
     /** created: 새로 만든 수, skipped: 이미 있는 이메일, failures: 잘못된 행 (index 는 이번 요청 안의 순번) */

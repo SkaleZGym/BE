@@ -55,7 +55,7 @@ public class MemberImportService {
             String name = row.name() == null || row.name().isBlank() ? email.substring(0, email.indexOf('@')) : row.name().trim();
             String phone = row.phone() == null || row.phone().isBlank() ? null : row.phone().trim();
             Member member = memberRepository.save(Member.importLegacy(Member.LEGACY_IMWEB, blankToNull(row.legacyId()), email, truncate(name, 50), phone,
-                    row.joinedAt(), Boolean.TRUE.equals(row.marketingConsent()), row.marketingConsentAt()));
+                    languageOf(row.language()), row.joinedAt(), Boolean.TRUE.equals(row.marketingConsent()), row.marketingConsentAt()));
             // 아임웹에서 쓰던 적립금을 그대로 옮긴다 (이미 있는 회원은 위에서 건너뛰어서 두 번 들어가지 않는다)
             if (row.points() != null && row.points() > 0) {
                 pointService.migrate(member, row.points());
@@ -63,6 +63,17 @@ public class MemberImportService {
             created++;
         }
         return new ImportResult(created, skipped, failures);
+    }
+
+    /** 아임웹 '언어' 칸 → 우리 언어 코드. 아임웹은 KR(한국어 사이트)·EN(영어 사이트)로 내보낸다. 모르는 값은 한국어 */
+    private static String languageOf(String value) {
+        String code = value == null ? "" : value.trim().toUpperCase(Locale.ROOT);
+        return switch (code) {
+            case "EN", "EN-US", "ENGLISH" -> "en";
+            case "JA", "JP" -> "ja";
+            case "ZH", "CN", "ZH-CN" -> "zh-CN";
+            default -> "ko";
+        };
     }
 
     private static String blankToNull(String value) {
