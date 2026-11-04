@@ -1,6 +1,8 @@
 package com.skalez.global.config;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import com.skalez.audit.api.AdminAccessLogFilter;
+import com.skalez.audit.service.AdminAccessLogService;
 import com.skalez.global.security.CorsProperties;
 import com.skalez.global.security.JwtProperties;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -36,6 +39,7 @@ public class SecurityConfig {
 
     private final JwtProperties jwtProperties;
     private final CorsProperties corsProperties;
+    private final AdminAccessLogService accessLogService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -60,7 +64,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/files/**").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
+                // 관리자 접속기록: 토큰 확인 바로 뒤에 두어 누가 했는지 알고, 권한 없어 막힌 요청(401·403)도 남긴다
+                .addFilterAfter(new AdminAccessLogFilter(accessLogService), BearerTokenAuthenticationFilter.class);
         return http.build();
     }
 

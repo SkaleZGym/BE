@@ -27,7 +27,7 @@ public class AdminMemberController {
     private final AdminMemberService adminMemberService;
     private final MemberImportService memberImportService;
     @GetMapping
-    public PageResponse<AdminMemberResponse> search(@RequestParam(required = false) String keyword, @RequestParam(required = false) MemberStatus status, @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {return adminMemberService.search(keyword, status, pageable);}
+    public PageResponse<AdminMemberResponse> search(@RequestParam(required = false) String keyword, @RequestParam(required = false) MemberStatus status, @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {return adminMemberService.search(keyword, status, PageResponse.capped(pageable));}
     /** 아임웹 회원 가져오기 (관리자 화면이 CSV를 읽어 1,000명씩 보낸다) */
     @PostMapping("/import")
     public ImportResult importMembers(@Valid @RequestBody ImportMembersRequest request) {return memberImportService.importMembers(request);}

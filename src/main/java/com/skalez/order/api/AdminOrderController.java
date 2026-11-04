@@ -24,7 +24,7 @@ public class AdminOrderController {
     public PageResponse<AdminOrderResponse> getOrders(
             @RequestParam(required = false) OrderStatus status,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return adminOrderService.getOrders(status, pageable);
+        return adminOrderService.getOrders(status, PageResponse.capped(pageable));
     }
 
     @GetMapping("/{orderNumber}")
