@@ -36,7 +36,9 @@ public class AdminOrderService {
 
     @Transactional
     public AdminOrderResponse changeStatus(String orderNumber, OrderStatus status, Courier courier, String trackingNumber) {
-        Order order = find(orderNumber);
+        // 고객 취소와 동시에 들어와도 한쪽씩 처리되게 잠근다
+        Order order = orderRepository.findForUpdateByOrderNumber(orderNumber)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
         order.changeStatus(status, courier, trackingNumber);
         if (status == OrderStatus.SHIPPED) {
             orderNotifier.shipped(order);

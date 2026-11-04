@@ -86,7 +86,7 @@ public class OrderService {
     /** FE에서 PG 결제를 마친 뒤 호출. 서버가 PG에 직접 조회해서 금액을 검증한다 */
     @Transactional
     public OrderResponse confirmPayment(Long memberId, String orderNumber, String paymentId) {
-        Order order = findMyOrder(memberId, orderNumber);
+        Order order = findMyOrderForUpdate(memberId, orderNumber);
         if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
             throw new BusinessException(ErrorCode.INVALID_ORDER_STATUS);
         }
@@ -100,10 +100,11 @@ public class OrderService {
      * PG가 결제 결과를 우리 서버로 직접 보내는 방식(나이스페이 returnUrl)에서 호출.
      * 로그인 토큰이 없으므로 주문번호로 찾고, 결제창 금액이 서버 주문 금액과 같은지 먼저 확인한다.
      * 같은 결과가 두 번 들어와도(새로고침 등) 이미 결제된 주문이면 그대로 성공 처리한다.
+     * 주문을 잠그고 PG 승인을 기다리므로, 그동안 들어온 취소는 승인이 끝난 뒤 "결제된 주문 취소(환불)"로 처리된다
      */
     @Transactional
     public Order confirmPaymentByPg(String orderNumber, String paymentKey, long requestedAmount) {
-        Order order = orderRepository.findByOrderNumber(orderNumber)
+        Order order = orderRepository.findForUpdateByOrderNumber(orderNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
         if (order.getStatus() == OrderStatus.PAID && paymentKey.equals(order.getPaymentId())) {
             return order;
@@ -122,7 +123,7 @@ public class OrderService {
 
     @Transactional
     public OrderResponse cancel(Long memberId, String orderNumber) {
-        Order order = findMyOrder(memberId, orderNumber);
+        Order order = findMyOrderForUpdate(memberId, orderNumber);
         cancelOrder(order);
         return OrderResponse.from(order);
     }
@@ -133,7 +134,7 @@ public class OrderService {
      */
     @Transactional
     public boolean cancelUnpaid(String orderNumber) {
-        Order order = orderRepository.findByOrderNumber(orderNumber).orElse(null);
+        Order order = orderRepository.findForUpdateByOrderNumber(orderNumber).orElse(null);
         if (order == null || order.getStatus() != OrderStatus.PENDING_PAYMENT) {
             return false;
         }
@@ -144,7 +145,7 @@ public class OrderService {
     /** 관리자 취소 (품절·고객 요청 등). 규칙은 고객 취소와 같다 */
     @Transactional
     public Order cancelByAdmin(String orderNumber) {
-        Order order = orderRepository.findByOrderNumber(orderNumber)
+        Order order = orderRepository.findForUpdateByOrderNumber(orderNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
         cancelOrder(order);
         return order;
@@ -182,6 +183,13 @@ public class OrderService {
     /** 다른 회원의 주문번호를 넣어도 "없음"으로 보이게 한다 */
     private Order findMyOrder(Long memberId, String orderNumber) {
         return orderRepository.findByOrderNumberAndMemberId(orderNumber, memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+    }
+
+    /** 상태를 바꿀 내 주문 (잠금). 다른 회원 주문은 "없음" */
+    private Order findMyOrderForUpdate(Long memberId, String orderNumber) {
+        return orderRepository.findForUpdateByOrderNumber(orderNumber)
+                .filter(order -> order.getMemberId().equals(memberId))
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
     }
 
