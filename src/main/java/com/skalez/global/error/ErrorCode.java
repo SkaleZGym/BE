@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 
 public enum ErrorCode {
     INVALID_INPUT(HttpStatus.BAD_REQUEST, "error.invalid-input"),
+    TOO_MANY_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, "error.too-many-requests"),
 
     EMAIL_DUPLICATED(HttpStatus.CONFLICT, "error.member.email-duplicated"),
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "error.member.invalid-credentials"),

@@ -69,6 +69,10 @@ skalez:
     # S3 버킷 이름과 지역. 버킷이 비어 있으면 위 폴더(dir)에 저장 (로컬). 운영은 환경변수 STORAGE_BUCKET 을 넣는다
     bucket: ${STORAGE_BUCKET:}
     region: ${STORAGE_REGION:ap-northeast-2}
+  # FE 서버(Vercel)와 BE 만 아는 공유 비밀값. 이 값이 맞는 요청만 FE 가 알려 준 접속자 IP(X-Client-Ip)를 믿는다.
+  # 요청 횟수 제한을 접속자별로 세는 데 쓴다 (없으면 FE 서버 주소로 세서 손님 전체가 한 사람처럼 묶임). 로컬은 비워 둔다
+  security:
+    bff-secret: ${BFF_SECRET:}
   # 고객이 보는 쇼핑몰 주소 (메일 속 링크용)
   site:
     url: ${SITE_URL:https://skalez.com}
@@ -98,7 +102,8 @@ skalez:
 
 ---
 # 운영. SPRING_PROFILES_ACTIVE=prod 로 실행한다.
-# 필수 환경변수: DB_URL, DB_USERNAME, DB_PASSWORD, JWT_SECRET, AES_KEY, NICEPAY_CLIENT_KEY, NICEPAY_SECRET_KEY
+# 필수 환경변수: DB_URL, DB_USERNAME, DB_PASSWORD, JWT_SECRET, AES_KEY, NICEPAY_CLIENT_KEY, NICEPAY_SECRET_KEY,
+#   BFF_SECRET(32자 이상, Vercel 환경변수 BFF_SECRET 과 같은 값)
 # 선택: ADMIN_EMAIL / ADMIN_PASSWORD (첫 관리자), CORS_ALLOWED_ORIGINS, PAYMENT_RESULT_URL
 # 이미지(S3): STORAGE_BUCKET, STORAGE_REGION, STORAGE_PUBLIC_URL(사진 주소 앞부분), AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 # 메일(SES SMTP): SPRING_MAIL_HOST=email-smtp.ap-northeast-2.amazonaws.com, SPRING_MAIL_PORT=587,
