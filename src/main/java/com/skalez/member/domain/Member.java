@@ -75,6 +75,20 @@ public class Member {
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
+    /**
+     * 관리자 2단계 인증(OTP 앱) 비밀값. AES-256 암호화 저장.
+     * otpEnabledAt 이 있어야 켜진 것 — 비밀값만 있으면 아직 등록 중 (첫 코드를 맞히면 켜진다)
+     */
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(length = 255)
+    private String otpSecret;
+    private Instant otpEnabledAt;
+    /** 마지막으로 쓴 코드의 30초 칸 번호 — 같은 코드를 두 번 쓰지 못하게 */
+    private Long otpLastStep;
+    /** 켜진 뒤 연달아 틀린 횟수. 맞히면 0 */
+    @Column(nullable = false)
+    private int otpFailures;
+
     public Member(String email, String encodedPassword, String name, String language) {
         this.email = email;
         this.password = encodedPassword;
@@ -121,6 +135,43 @@ public class Member {
 
     public void changeRole(Role role) {
         this.role = role;
+        // 관리자에서 내려가면 2단계 인증도 지운다 (다시 관리자가 되면 처음부터 등록)
+        if (role != Role.ADMIN) resetOtp();
+    }
+
+    public boolean isOtpEnabled() {
+        return otpEnabledAt != null;
+    }
+
+    /** OTP 앱 등록 시작: 새 비밀값을 넣어 두고, 첫 코드를 맞힐 때 켠다 (등록 중 다시 오면 새 값으로 바뀜) */
+    public void startOtpSetup(String secret) {
+        this.otpSecret = secret;
+        this.otpEnabledAt = null;
+        this.otpLastStep = null;
+        this.otpFailures = 0;
+    }
+
+    /**
+     * 맞힌 코드(30초 칸 번호)를 쓴다. 틀렸거나(-1) 이미 쓴 코드면 false.
+     * 틀린 횟수는 켜진 뒤에만 센다 (등록 중에는 처음부터 다시 등록하면 되니까 잠그지 않는다)
+     */
+    public boolean useOtpStep(long step) {
+        if (step < 0 || (otpLastStep != null && step <= otpLastStep)) {
+            if (isOtpEnabled()) otpFailures++;
+            return false;
+        }
+        this.otpLastStep = step;
+        this.otpFailures = 0;
+        if (otpEnabledAt == null) this.otpEnabledAt = Instant.now();
+        return true;
+    }
+
+    /** 2단계 인증 초기화 (휴대폰 분실·잠김). 다음 관리자 로그인 때 OTP 앱을 다시 등록한다 */
+    public void resetOtp() {
+        this.otpSecret = null;
+        this.otpEnabledAt = null;
+        this.otpLastStep = null;
+        this.otpFailures = 0;
     }
 
     /** 마이페이지: 이름·기본 언어 */

@@ -28,10 +28,12 @@ public final class AdminMemberDtos {
     }
     /** passwordSet=false: 아임웹에서 옮겨 와 아직 새 비밀번호를 정하지 않은 회원 */
     public record AdminMemberResponse(Long id, String email, String name, String phone, String role, String status, String language,
-                                      boolean marketingConsent, String legacySource, boolean passwordSet, long pointBalance, Instant createdAt){
+                                      boolean marketingConsent, String legacySource, boolean passwordSet, long pointBalance, Instant createdAt,
+                                      /** 관리자 2단계 인증(OTP 앱)이 켜져 있는지 */
+                                      boolean otpEnabled){
         public static AdminMemberResponse from(Member member){
             return new AdminMemberResponse(member.getId(), member.getEmail(), member.getName(), member.getPhone(), member.getRole().name(), member.getStatus().name(), member.getLanguage(),
-                    member.isMarketingConsent(), member.getLegacySource(), !member.needsPasswordSetup(), member.getPointBalance(), member.getCreatedAt());
+                    member.isMarketingConsent(), member.getLegacySource(), !member.needsPasswordSetup(), member.getPointBalance(), member.getCreatedAt(), member.isOtpEnabled());
         }
     }
 }

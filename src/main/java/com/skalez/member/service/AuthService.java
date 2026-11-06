@@ -5,6 +5,9 @@ import com.skalez.global.error.ErrorCode;
 import com.skalez.global.i18n.SupportedLanguage;
 import com.skalez.global.security.JwtTokenProvider;
 import com.skalez.global.security.LoginAttemptLimiter;
+import com.skalez.global.security.Totp;
+import com.skalez.member.api.AuthDtos.AdminLoginRequest;
+import com.skalez.member.api.AuthDtos.AdminLoginResponse;
 import com.skalez.member.api.AuthDtos.ChangePasswordRequest;
 import com.skalez.member.api.AuthDtos.LoginRequest;
 import com.skalez.member.api.AuthDtos.MemberResponse;
@@ -22,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.Locale;
 
 @Service
@@ -60,13 +64,45 @@ public class AuthService {
         return refreshTokenService.issueWithAccess(member);
     }
 
-    /** 관리자 페이지 로그인. 일반 회원이면 이메일/비밀번호가 틀린 것과 같은 에러 (관리자 여부 노출 방지) */
-    public TokenResponse adminLogin(LoginRequest request) {
-        Member member = authenticate(request);
+    /** 2단계 인증이 켜진 뒤 코드를 연달아 이만큼 틀리면 잠긴다 (다른 관리자가 초기화) */
+    static final int OTP_MAX_FAILURES = 10;
+    static final String OTP_ISSUER = "SKALEZ";
+
+    /**
+     * 관리자 페이지 로그인: 비밀번호 + OTP 앱 6자리. 일반 회원이면 이메일/비밀번호가 틀린 것과 같은 에러 (관리자 여부 노출 방지).
+     * - 코드 없이 오면: OTP 가 켜져 있으면 CODE(코드 입력), 아직 없으면 SETUP(새 비밀값 → OTP 앱 등록)
+     * - 코드와 함께 오면: 맞을 때만 관리자 토큰. 등록 중이면 이때 켜진다
+     * 코드 틀림도 로그인 실패로 센다(15분 5번). 켜진 뒤 연달아 10번 틀리면 잠긴다 — 틀린 횟수는 에러가 나도 저장한다(noRollbackFor).
+     * 로그인 유지(리프레시 토큰)는 없어서 1시간마다 다시 로그인
+     */
+    @Transactional(noRollbackFor = BusinessException.class)
+    public AdminLoginResponse adminLogin(AdminLoginRequest request) {
+        String email = request.email().toLowerCase(Locale.ROOT);
+        Member member = checkPassword(email, request.password());
         if (member.getRole() != Role.ADMIN) {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
-        return issueToken(member);
+        if (!member.isActive()) {
+            throw new BusinessException(ErrorCode.MEMBER_SUSPENDED);
+        }
+        if (member.getOtpFailures() >= OTP_MAX_FAILURES) {
+            throw new BusinessException(ErrorCode.ADMIN_OTP_LOCKED);
+        }
+        if (request.code() == null) {
+            if (member.isOtpEnabled()) {
+                return AdminLoginResponse.codeRequired();
+            }
+            String secret = Totp.newSecret();
+            member.startOtpSetup(secret);
+            return AdminLoginResponse.setup(secret, Totp.uri(OTP_ISSUER, member.getEmail(), secret));
+        }
+        long step = Totp.matchingStep(member.getOtpSecret(), request.code(), Instant.now());
+        if (!member.useOtpStep(step)) {
+            loginAttemptLimiter.recordFailure(email);
+            throw new BusinessException(member.getOtpFailures() >= OTP_MAX_FAILURES ? ErrorCode.ADMIN_OTP_LOCKED : ErrorCode.ADMIN_OTP_INVALID);
+        }
+        loginAttemptLimiter.reset(email);
+        return AdminLoginResponse.ok(tokenProvider.createAdminAccessToken(member), tokenProvider.adminAccessTokenTtlSeconds());
     }
 
     public MemberResponse me(Long memberId) {
@@ -129,13 +165,7 @@ public class AuthService {
      */
     private Member authenticate(LoginRequest request) {
         String email = request.email().toLowerCase(Locale.ROOT);
-        loginAttemptLimiter.check(email);
-        Member member = memberRepository.findByEmail(email)
-                .filter(found -> !found.needsPasswordSetup() && passwordEncoder.matches(request.password(), found.getPassword()))
-                .orElseThrow(() -> {
-                    loginAttemptLimiter.recordFailure(email);
-                    return new BusinessException(ErrorCode.INVALID_CREDENTIALS);
-                });
+        Member member = checkPassword(email, request.password());
         loginAttemptLimiter.reset(email);
         if (!member.isActive()) {
             throw new BusinessException(ErrorCode.MEMBER_SUSPENDED);
@@ -143,14 +173,14 @@ public class AuthService {
         return member;
     }
 
-    private TokenResponse issueToken(Member member) {
-        // 관리자는 로그인 유지(리프레시 토큰) 없이 2시간마다 다시 로그인
-        return new TokenResponse(
-                tokenProvider.createAccessToken(member),
-                "Bearer",
-                tokenProvider.accessTokenTtlSeconds(),
-                null,
-                null
-        );
+    /** 비밀번호만 확인한다. 실패 기록을 지우는 건 부르는 쪽 (관리자는 OTP 까지 맞힌 뒤에 지운다) */
+    private Member checkPassword(String email, String password) {
+        loginAttemptLimiter.check(email);
+        return memberRepository.findByEmail(email)
+                .filter(found -> !found.needsPasswordSetup() && passwordEncoder.matches(password, found.getPassword()))
+                .orElseThrow(() -> {
+                    loginAttemptLimiter.recordFailure(email);
+                    return new BusinessException(ErrorCode.INVALID_CREDENTIALS);
+                });
     }
 }

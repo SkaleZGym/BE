@@ -21,6 +21,8 @@ public enum ErrorCode {
     SOCIAL_EMAIL_IN_USE(HttpStatus.CONFLICT, "error.social.email-in-use"),
     SOCIAL_SIGNUP_EXPIRED(HttpStatus.BAD_REQUEST, "error.social.signup-expired"),
     SELF_MODIFICATION(HttpStatus.BAD_REQUEST, "error.member.self-modification"),
+    ADMIN_OTP_INVALID(HttpStatus.UNAUTHORIZED, "error.admin.otp-invalid"),
+    ADMIN_OTP_LOCKED(HttpStatus.FORBIDDEN, "error.admin.otp-locked"),
 
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "error.category.not-found"),
     CATEGORY_CODE_DUPLICATED(HttpStatus.CONFLICT, "error.category.code-duplicated"),

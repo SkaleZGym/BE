@@ -37,4 +37,7 @@ public class AdminMemberController {
     public AdminMemberResponse changeStatus(@AuthenticationPrincipal Jwt jwt, @PathVariable Long memberId, @Valid @RequestBody ChangeStatusRequest request) {return adminMemberService.changeStatus(LoginMember.id(jwt), memberId, request.status());}
     @PatchMapping("/{memberId}/role")
     public AdminMemberResponse changeRole(@AuthenticationPrincipal Jwt jwt, @PathVariable Long memberId, @Valid @RequestBody ChangeRoleRequest request) {return adminMemberService.changeRole(LoginMember.id(jwt), memberId, request.role());}
+    /** 다른 관리자의 2단계 인증 초기화 (자기 자신은 안 됨) */
+    @DeleteMapping("/{memberId}/otp")
+    public AdminMemberResponse resetOtp(@AuthenticationPrincipal Jwt jwt, @PathVariable Long memberId) {return adminMemberService.resetOtp(LoginMember.id(jwt), memberId);}
 }

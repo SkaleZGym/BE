@@ -37,6 +37,13 @@ public class AdminMemberService {
         member.changeRole(role);
         return AdminMemberResponse.from(member);
     }
+    /** 다른 관리자의 2단계 인증 초기화 (휴대폰 분실·잠김). 그 관리자는 다음 로그인 때 OTP 앱을 다시 등록한다 */
+    @Transactional
+    public AdminMemberResponse resetOtp(Long adminId, Long memberId) {
+        Member member = findOther(adminId, memberId);
+        member.resetOtp();
+        return AdminMemberResponse.from(member);
+    }
     private Member findOther(Long adminId, Long memberId) {if (adminId.equals(memberId)) {throw new BusinessException(ErrorCode.SELF_MODIFICATION);}
         return find(memberId);
     }

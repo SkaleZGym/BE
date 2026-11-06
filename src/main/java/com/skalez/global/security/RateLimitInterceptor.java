@@ -30,7 +30,7 @@ public class RateLimitInterceptor implements HandlerInterceptor, WebMvcConfigure
     record Rule(String name, HttpMethod method, String pattern, int max, Duration window){}
     static final List<Rule> RULES = List.of(
             new Rule("login", HttpMethod.POST, "/api/auth/login", 20, Duration.ofMinutes(10)),
-            new Rule("admin-login", HttpMethod.POST, "/api/admin/auth/login", 10, Duration.ofMinutes(10)),
+            new Rule("admin-login", HttpMethod.POST, "/api/admin/auth/login", 20, Duration.ofMinutes(10)), // 한 번 로그인에 두 번(비밀번호 → OTP 코드)
             new Rule("signup", HttpMethod.POST, "/api/auth/signup", 5, Duration.ofHours(1)),
             new Rule("social", HttpMethod.POST, "/api/auth/oauth/**", 30, Duration.ofMinutes(10)),
             new Rule("password-reset", HttpMethod.POST, "/api/auth/password-reset", 5, Duration.ofHours(1)),

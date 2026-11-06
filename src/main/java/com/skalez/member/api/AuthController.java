@@ -1,6 +1,8 @@
 package com.skalez.member.api;
 
 import com.skalez.global.security.LoginMember;
+import com.skalez.member.api.AuthDtos.AdminLoginRequest;
+import com.skalez.member.api.AuthDtos.AdminLoginResponse;
 import com.skalez.member.api.AuthDtos.ChangePasswordRequest;
 import com.skalez.member.api.AuthDtos.LoginRequest;
 import com.skalez.member.api.AuthDtos.MemberResponse;
@@ -63,8 +65,8 @@ public class AuthController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void withdraw(@AuthenticationPrincipal Jwt jwt, @RequestBody(required = false) WithdrawRequest request){authService.withdraw(LoginMember.id(jwt), request == null ? null : request.password());}
 
-    //관리자
+    //관리자: 비밀번호 + OTP 앱 6자리 (응답 step 이 CODE·SETUP 이면 코드를 넣어 다시 보낸다)
     @PostMapping("/api/admin/auth/login")
-    public TokenResponse adminLogin(@Valid @RequestBody LoginRequest request){return authService.adminLogin(request);}
+    public AdminLoginResponse adminLogin(@Valid @RequestBody AdminLoginRequest request){return authService.adminLogin(request);}
     
 }
