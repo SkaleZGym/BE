@@ -92,7 +92,7 @@ skalez:
     naver:
       client-id: ${NAVER_CLIENT_ID:}
       client-secret: ${NAVER_CLIENT_SECRET:}
-  # 결제 PG 선택: nice(나이스페이먼츠) | fake(로컬 가짜 결제) | portone(해외용, 연동 전)
+  # 결제 PG 선택: nice(나이스페이먼츠) | none(결제 준비 중 — PG 계약 전 운영) | fake(로컬 가짜 결제) | portone(해외용, 연동 전)
   payment:
     provider: ${PAYMENT_PROVIDER:nice}
     nice:
@@ -105,7 +105,8 @@ skalez:
 ---
 # 운영. SPRING_PROFILES_ACTIVE=prod 로 실행한다.
 # 필수 환경변수: DB_URL, DB_USERNAME, DB_PASSWORD, JWT_SECRET, AES_KEY, NICEPAY_CLIENT_KEY, NICEPAY_SECRET_KEY,
-#   BFF_SECRET(32자 이상, Vercel 환경변수 BFF_SECRET 과 같은 값)
+#   BFF_SECRET(32자 이상, FE 서버 fe.env 의 BFF_SECRET 과 같은 값)
+# PG 계약 전에는 PAYMENT_PROVIDER=none 이면 나이스페이 키 없이 뜨고, 결제만 '준비 중'으로 막힌다
 # 선택: ADMIN_EMAIL / ADMIN_PASSWORD (첫 관리자), CORS_ALLOWED_ORIGINS, PAYMENT_RESULT_URL
 # 이미지(S3): STORAGE_BUCKET, STORAGE_REGION, STORAGE_PUBLIC_URL(사진 주소 앞부분), AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 # 메일(SES SMTP): SPRING_MAIL_HOST=email-smtp.ap-northeast-2.amazonaws.com, SPRING_MAIL_PORT=587,

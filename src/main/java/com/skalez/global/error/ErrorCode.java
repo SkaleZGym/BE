@@ -45,6 +45,7 @@ public enum ErrorCode {
     PAYMENT_AMOUNT_MISMATCH(HttpStatus.BAD_REQUEST, "error.payment.amount-mismatch"),
     PAYMENT_GATEWAY_ERROR(HttpStatus.BAD_GATEWAY, "error.payment.gateway"),
     PAYMENT_CURRENCY_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "error.payment.currency-not-supported"),
+    PAYMENT_NOT_READY(HttpStatus.SERVICE_UNAVAILABLE, "error.payment.not-ready"),
     COURIER_REQUIRED(HttpStatus.BAD_REQUEST, "error.order.courier-required"),
     SHIPPING_NOT_AVAILABLE(HttpStatus.BAD_REQUEST, "error.shipping.not-available"),
 

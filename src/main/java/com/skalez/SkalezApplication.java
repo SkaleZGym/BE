@@ -47,7 +47,7 @@ public class SkalezApplication {
 		}
 		// 없으면 요청 횟수 제한이 손님 전체를 한 사람으로 세서, 몇 명만 로그인해도 모두 막힌다
 		if (env.getProperty("BFF_SECRET", "").length() < 32) {
-			throw new IllegalStateException("BFF_SECRET(32자 이상)을 넣어 주세요 — Vercel 환경변수 BFF_SECRET 과 같은 값");
+			throw new IllegalStateException("BFF_SECRET(32자 이상)을 넣어 주세요 — FE 서버 fe.env 의 BFF_SECRET 과 같은 값");
 		}
 	}
 
