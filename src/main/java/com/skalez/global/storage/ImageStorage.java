@@ -47,16 +47,25 @@ public class ImageStorage {
         }
         if (extension == null) throw new BusinessException(ErrorCode.UPLOAD_INVALID_FILE);
 
+        try {
+            return storeBytes(file.getBytes(), extension);
+        } catch (IOException e) {
+            throw new BusinessException(ErrorCode.UPLOAD_INVALID_FILE);
+        }
+    }
+
+    /** 서버에서 만든 이미지(예: 배경을 지운 PNG)를 저장한다. extension 은 jpg·png·gif·webp */
+    public String storeBytes(byte[] bytes, String extension) {
         String relative = LocalDate.now().format(MONTH) + "/" + UUID.randomUUID() + "." + extension;
         if (properties.useBucket()) {
-            return storeInBucket(file, relative, extension);
+            return storeInBucket(bytes, relative, extension);
         }
         Path root = Path.of(properties.dir()).toAbsolutePath().normalize();
         Path target = root.resolve(relative).normalize();
         if (!target.startsWith(root)) throw new BusinessException(ErrorCode.UPLOAD_INVALID_FILE);
         try {
             Files.createDirectories(target.getParent());
-            file.transferTo(target);
+            Files.write(target, bytes);
         } catch (IOException e) {
             throw new IllegalStateException("이미지를 저장하지 못했습니다", e);
         }
@@ -64,14 +73,14 @@ public class ImageStorage {
     }
 
     /** S3 버킷에 올린다. 파일 이름이 매번 새로 생겨서 브라우저가 1년 캐시해도 된다 */
-    private String storeInBucket(MultipartFile file, String key, String extension) {
+    private String storeInBucket(byte[] bytes, String key, String extension) {
         String contentType = switch (extension) {
             case "jpg" -> "image/jpeg";
             case "png" -> "image/png";
             case "gif" -> "image/gif";
             default -> "image/webp";
         };
-        try (InputStream in = file.getInputStream()) {
+        try {
             bucketClient().putObject(
                     PutObjectRequest.builder()
                             .bucket(properties.bucket())
@@ -79,8 +88,8 @@ public class ImageStorage {
                             .contentType(contentType)
                             .cacheControl("public, max-age=31536000, immutable")
                             .build(),
-                    RequestBody.fromInputStream(in, file.getSize()));
-        } catch (IOException | RuntimeException e) {
+                    RequestBody.fromBytes(bytes));
+        } catch (RuntimeException e) {
             throw new IllegalStateException("이미지를 버킷에 저장하지 못했습니다", e);
         }
         return properties.publicUrl() + "/" + key;

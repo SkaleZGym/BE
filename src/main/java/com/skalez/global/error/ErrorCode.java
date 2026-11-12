@@ -15,6 +15,7 @@ public enum ErrorCode {
     REFRESH_TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "error.member.refresh-token-invalid"),
     TOO_MANY_LOGIN_ATTEMPTS(HttpStatus.TOO_MANY_REQUESTS, "error.member.too-many-attempts"),
     UPLOAD_INVALID_FILE(HttpStatus.BAD_REQUEST, "error.upload.invalid-file"),
+    IMAGE_FETCH_FAILED(HttpStatus.BAD_REQUEST, "error.upload.fetch-failed"),
     SOCIAL_LOGIN_NOT_CONFIGURED(HttpStatus.SERVICE_UNAVAILABLE, "error.social.not-configured"),
     SOCIAL_LOGIN_FAILED(HttpStatus.BAD_GATEWAY, "error.social.failed"),
     SOCIAL_EMAIL_REQUIRED(HttpStatus.BAD_REQUEST, "error.social.email-required"),
