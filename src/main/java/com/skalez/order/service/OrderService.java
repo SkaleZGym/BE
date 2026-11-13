@@ -178,6 +178,10 @@ public class OrderService {
         }
         // 쓴 적립금 돌려주기 (취소는 배송 전이라 받은 적립금은 아직 없다)
         pointService.restoreUsed(order.getMemberId(), order.getPointsUsed(), order.getOrderNumber());
+        // 환불이 있었던 취소만 손님에게 알린다 (결제 전 자동 취소는 조용히)
+        if (wasPaid) {
+            orderNotifier.cancelled(order);
+        }
     }
 
     /** 다른 회원의 주문번호를 넣어도 "없음"으로 보이게 한다 */

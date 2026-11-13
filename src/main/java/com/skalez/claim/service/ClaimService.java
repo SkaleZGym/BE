@@ -17,6 +17,7 @@ import com.skalez.order.domain.Order;
 import com.skalez.order.domain.OrderItem;
 import com.skalez.order.domain.OrderStatus;
 import com.skalez.order.repository.OrderRepository;
+import com.skalez.order.service.OrderNotifier;
 import com.skalez.payment.service.PaymentService;
 import com.skalez.point.service.PointService;
 import com.skalez.product.repository.ProductVariantRepository;
@@ -52,6 +53,7 @@ public class ClaimService {
     private final ProductVariantRepository variantRepository;
     private final PaymentService paymentService;
     private final PointService pointService;
+    private final OrderNotifier orderNotifier;
 
     @Transactional
     public ClaimResponse request(Long memberId, CreateClaimRequest request) {
@@ -99,6 +101,7 @@ public class ClaimService {
     public ClaimResponse approve(Long claimId, String memo) {
         OrderClaim claim = find(claimId);
         claim.approve(blankToNull(memo));
+        orderNotifier.claimApproved(claim);
         return ClaimResponse.from(claim);
     }
 
@@ -106,6 +109,7 @@ public class ClaimService {
     public ClaimResponse reject(Long claimId, String memo) {
         OrderClaim claim = find(claimId);
         claim.reject(blankToNull(memo));
+        orderNotifier.claimRejected(claim);
         return ClaimResponse.from(claim);
     }
 
@@ -120,6 +124,7 @@ public class ClaimService {
             }
             claim.completeExchange(request.courier(), blankToNull(request.trackingNumber()));
         }
+        orderNotifier.claimCompleted(claim);
         return ClaimResponse.from(claim);
     }
 
